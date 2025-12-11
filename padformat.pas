@@ -37,6 +37,7 @@ type
     );
 
   TPadExpireBasedOn = (
+    pebNone,
     pebDays,
     pebRuns,
     pebDate,
@@ -108,11 +109,14 @@ type
   { TPadMasterVersionInfo }
   TPadMasterVersionInfo = class(TPersistent)
   private
+    FVersion: double;
     FMasterPadVersion: string;
     FMasterPadEditor: string;
     FMasterPadInfo: string;
+    procedure SetMasterPadVersion(Value: string);
   published
-    property MasterPadVersion: string read FMasterPadVersion write FMasterPadVersion;
+    property Version: double read FVersion write FVersion;
+    property MasterPadVersion: string read FMasterPadVersion write SetMasterPadVersion;
     property MasterPadEditor: string read FMasterPadEditor write FMasterPadEditor;
     property MasterPadInfo: string read FMasterPadInfo write FMasterPadInfo;
   end;
@@ -388,16 +392,17 @@ type
     FEULA: string;
   published
     property DistributionPermissions: string read FDistributionPermissions write FDistributionPermissions;
-    property DistributionPermissionsAsString: string read FDistributionPermissions write FDistributionPermissions;
     property EULA: string read FEULA write FEULA;
   end;
 
   { TPadASP }
   TPadASP = class(TPersistent)
   private
+    FASPForm: boolean;
     FASPMember: boolean;
     FASPMemberNumber: word;
   published
+    property ASPForm: boolean read FASPForm write FASPForm;
     property ASPMember: boolean read FASPMember write FASPMember;
     property ASPMemberNumber: word read FASPMemberNumber write FASPMemberNumber;
   end;
@@ -442,6 +447,9 @@ type
 // Helper functions for conversions
 function GetNodeText(Node: TDOMNode): string;
 
+function StrToInt64Safe(const S: string): int64;
+function StrToFloatSafe(const S: string): double;
+
 function PadInstallSupportToString(Value: TPadInstallSupport): string;
 function StringToPadInstallSupport(const Value: string): TPadInstallSupport;
 
@@ -463,6 +471,15 @@ function StringToPadLanguages(const Value: string): TPadLanguages;
 procedure Register;
 
 implementation
+
+{ TPadMasterVersionInfo }
+
+procedure TPadMasterVersionInfo.SetMasterPadVersion(Value: string);
+begin
+  FMasterPadVersion := Value;
+  FVersion := StrToFloatSafe(FMasterPadVersion);
+  if FVersion <= 0 then FVersion := 4;
+end;
 
 { TPadExpireInfo }
 
@@ -744,9 +761,9 @@ begin
         SubNode := Node.FindNode('File_Info');
         if Assigned(SubNode) then
         begin
-          FProgramInfo.FileInfo.FileSizeBytes := StrToInt64Def(GetNodeValue(SubNode, 'File_Size_Bytes'), 0);
-          FProgramInfo.FileInfo.FileSizeK := StrToInt64Def(GetNodeValue(SubNode, 'File_Size_K'), 0);
-          FProgramInfo.FileInfo.FileSizeMB := StrToFloatDef(GetNodeValue(SubNode, 'File_Size_MB'), 0);
+          FProgramInfo.FileInfo.FileSizeBytes := StrToInt64Safe(GetNodeValue(SubNode, 'File_Size_Bytes'));
+          FProgramInfo.FileInfo.FileSizeK := StrToInt64Safe(GetNodeValue(SubNode, 'File_Size_K'));
+          FProgramInfo.FileInfo.FileSizeMB := StrToFloatSafe(GetNodeValue(SubNode, 'File_Size_MB'));
         end;
 
         // Load Expire Info
@@ -809,7 +826,7 @@ begin
       Node := RootNode.FindNode('Permissions');
       if Assigned(Node) then
       begin
-        FPermissions.DistributionPermissionsAsString := GetNodeValue(Node, 'Distribution_Permissions');
+        FPermissions.DistributionPermissions := GetNodeValue(Node, 'Distribution_Permissions');
         FPermissions.EULA := GetNodeValue(Node, 'EULA');
       end;
 
@@ -817,6 +834,7 @@ begin
       Node := RootNode.FindNode('ASP');
       if Assigned(Node) then
       begin
+        FASP.ASPForm := UpperCase(GetNodeValue(Node, 'ASP_FORM')) = 'Y';
         FASP.ASPMember := UpperCase(GetNodeValue(Node, 'ASP_Member')) = 'Y';
         FASP.ASPMemberNumber := StrToIntDef(GetNodeValue(Node, 'ASP_Member_Number'), 0);
       end;
@@ -834,6 +852,7 @@ var
   Doc: TXMLDocument;
   RootNode, Node, SubNode: TDOMNode;
   Stream: TStringStream;
+  FS: TFormatSettings;
 begin
   Doc := TXMLDocument.Create;
   try
@@ -893,21 +912,24 @@ begin
     SetNodeText(Doc, SubNode, 'Fax_Phone',
       FCompanyInfo.SupportInfo.FaxPhone);
 
-    // Social media pages
-    SetNodeText(Doc, Node, 'GooglePlusPage', FCompanyInfo.GooglePlusPage);
-    SetNodeText(Doc, Node, 'LinkedinPage', FCompanyInfo.LinkedinPage);
-    SetNodeText(Doc, Node, 'TwitterCompanyPage', FCompanyInfo.TwitterCompanyPage);
-    SetNodeText(Doc, Node, 'FacebookCompanyPage', FCompanyInfo.FacebookCompanyPage);
-    SetNodeText(Doc, Node, 'CompanyStorePage', FCompanyInfo.CompanyStorePage);
+    if (MasterPadVersionInfo.Version >= 4) then
+    begin
+      // Social media pages
+      SetNodeText(Doc, Node, 'GooglePlusPage', FCompanyInfo.GooglePlusPage);
+      SetNodeText(Doc, Node, 'LinkedinPage', FCompanyInfo.LinkedinPage);
+      SetNodeText(Doc, Node, 'TwitterCompanyPage', FCompanyInfo.TwitterCompanyPage);
+      SetNodeText(Doc, Node, 'FacebookCompanyPage', FCompanyInfo.FacebookCompanyPage);
+      SetNodeText(Doc, Node, 'CompanyStorePage', FCompanyInfo.CompanyStorePage);
 
-    // News Feed
-    Node := AddChildNode(RootNode, 'NewsFeed');
-    SetNodeText(Doc, Node, 'NewsFeed_Feed_URL', FNewsFeed.NewsFeedFeedURL);
-    SetNodeText(Doc, Node, 'NewsFeed_Type', FNewsFeed.NewsFeedType);
-    SetNodeText(Doc, Node, 'NewsFeed_Title', FNewsFeed.NewsFeedTitle);
-    SetNodeText(Doc, Node, 'NewsFeed_Keywords', FNewsFeed.NewsFeedKeywords);
-    SetNodeText(Doc, Node, 'NewsFeed_Description_70', FNewsFeed.NewsFeedDescription70);
-    SetNodeText(Doc, Node, 'NewsFeed_Description_250', FNewsFeed.NewsFeedDescription250);
+      // News Feed
+      Node := AddChildNode(RootNode, 'NewsFeed');
+      SetNodeText(Doc, Node, 'NewsFeed_Feed_URL', FNewsFeed.NewsFeedFeedURL);
+      SetNodeText(Doc, Node, 'NewsFeed_Type', FNewsFeed.NewsFeedType);
+      SetNodeText(Doc, Node, 'NewsFeed_Title', FNewsFeed.NewsFeedTitle);
+      SetNodeText(Doc, Node, 'NewsFeed_Keywords', FNewsFeed.NewsFeedKeywords);
+      SetNodeText(Doc, Node, 'NewsFeed_Description_70', FNewsFeed.NewsFeedDescription70);
+      SetNodeText(Doc, Node, 'NewsFeed_Description_250', FNewsFeed.NewsFeedDescription250);
+    end;
 
     // Program Info
     Node := AddChildNode(RootNode, 'Program_Info');
@@ -920,11 +942,11 @@ begin
     SetNodeText(Doc, Node, 'Program_Release_Year',
       IntToStr(FProgramInfo.ProgramReleaseYear));
     SetNodeText(Doc, Node, 'Program_Cost_Dollars',
-      IntToStr(FProgramInfo.ProgramCostDollars));
+      IfThen(FProgramInfo.ProgramCostDollars = 0, '', IntToStr(FProgramInfo.ProgramCostDollars)));
     SetNodeText(Doc, Node, 'Program_Cost_Other_Code',
       FProgramInfo.ProgramCostOtherCode);
     SetNodeText(Doc, Node, 'Program_Cost_Other',
-      IntToStr(FProgramInfo.ProgramCostOther));
+      IfThen(FProgramInfo.ProgramCostOther = 0, '', IntToStr(FProgramInfo.ProgramCostOther)));
     SetNodeText(Doc, Node, 'Program_Type',
       FProgramInfo.ProgramTypeAsString);
     SetNodeText(Doc, Node, 'Program_Release_Status',
@@ -950,15 +972,16 @@ begin
       IntToStr(FProgramInfo.FileInfo.FileSizeBytes));
     SetNodeText(Doc, SubNode, 'File_Size_K',
       IntToStr(FProgramInfo.FileInfo.FileSizeK));
+    FS.DecimalSeparator := '.';
     SetNodeText(Doc, SubNode, 'File_Size_MB',
-      FloatToStr(FProgramInfo.FileInfo.FileSizeMB));
+      FloatToStr(FProgramInfo.FileInfo.FileSizeMB, FS));
 
     // Expire Info
     SubNode := AddChildNode(Node, 'Expire_Info');
     SetNodeText(Doc, SubNode, 'Has_Expire_Info',
-      BoolToStr(FProgramInfo.ExpireInfo.HasExpireInfo, 'Y', ''));
+      BoolToStr(FProgramInfo.ExpireInfo.HasExpireInfo, 'Y', 'N'));
     SetNodeText(Doc, SubNode, 'Expire_Count',
-      IntToStr(FProgramInfo.ExpireInfo.ExpireCount));
+      IfThen(FProgramInfo.ExpireInfo.ExpireCount = 0, '', IntToStr(FProgramInfo.ExpireInfo.ExpireCount)));
     SetNodeText(Doc, SubNode, 'Expire_Based_On',
       FProgramInfo.ExpireInfo.ExpireBasedOnAsString);
     SetNodeText(Doc, SubNode, 'Expire_Other_Info',
@@ -1012,15 +1035,17 @@ begin
 
     // Permissions
     Node := AddChildNode(RootNode, 'Permissions');
-    SetNodeText(Doc, Node, 'Distribution_Permissions',
-      FPermissions.DistributionPermissionsAsString);
+    SetNodeText(Doc, Node, 'Distribution_Permissions', FPermissions.DistributionPermissions);
     SetNodeText(Doc, Node, 'EULA', FPermissions.EULA);
 
     // ASP
     Node := AddChildNode(RootNode, 'ASP');
-    SetNodeText(Doc, Node, 'ASP_Member', BoolToStr(FASP.ASPMember, 'Y', ''));
+    if (MasterPadVersionInfo.Version < 4) then
+      SetNodeText(Doc, Node, 'ASP_FORM', BoolToStr(FASP.ASPForm, 'Y', 'N'));
+    SetNodeText(Doc, Node, 'ASP_Member', BoolToStr(FASP.ASPMember, 'Y', 'N'));
+
     SetNodeText(Doc, Node, 'ASP_Member_Number',
-      IntToStr(FASP.ASPMemberNumber));
+      IfThen(FASP.ASPMemberNumber = 0, '', IntToStr(FASP.ASPMemberNumber)));
 
     // Save to string
     Stream := TStringStream.Create('');
@@ -1143,6 +1168,7 @@ begin
   FPermissions.EULA := '';
 
   // Clear ASP
+  FASP.ASPForm := False;
   FASP.ASPMember := False;
   FASP.ASPMemberNumber := 0;
 end;
@@ -1174,6 +1200,33 @@ begin
     Result := Node.FirstChild.NodeValue
   else
     Result := '';
+end;
+
+function StrToInt64Safe(const S: string): int64;
+begin
+  // Convert string to Int64 safely, default to 0 if conversion fails
+  Result := StrToInt64Def(Trim(S), 0);
+end;
+
+function StrToFloatSafe(const S: string): double;
+var
+  Temp: string;
+  FS: TFormatSettings;
+begin
+  Temp := Trim(S);
+  if Temp = '' then
+    Exit(0);
+
+  // Try with dot
+  FS := DefaultFormatSettings;
+  FS.DecimalSeparator := '.';
+  Result := StrToFloatDef(Temp, 0, FS);
+  if Result <> 0 then
+    Exit;
+
+  // Try with comma
+  FS.DecimalSeparator := ',';
+  Result := StrToFloatDef(Temp, 0, FS);
 end;
 
 function PadInstallSupportToString(Value: TPadInstallSupport): string;
@@ -1264,6 +1317,7 @@ end;
 function PadExpireBasedOnToString(Value: TPadExpireBasedOn): string;
 begin
   case Value of
+    pebNone: Result := '';
     pebDays: Result := 'Days';
     pebRuns: Result := 'Runs';
     pebDate: Result := 'Date';
@@ -1282,7 +1336,7 @@ begin
   else if Value = 'Other' then
     Result := pebOther
   else
-    Result := pebDays; // Default
+    Result := pebNone; // Default
 end;
 
 function StringToPadDistributionPermission(const Value: string): string;

@@ -9,7 +9,6 @@ uses
 
 type
 
-
   // Forward declarations
   TPadContactInfo = class;
   TPadSupportInfo = class;
@@ -178,14 +177,22 @@ type
     FProgramType: TPadProgramType;
     FProgramReleaseStatus: TPadReleaseStatus;
     FProgramInstallSupport: TPadInstallSupport;
-    FProgramOSSupport: TPadOSSupport;
-    FProgramLanguage: TPadLanguages;
+    // OS Support groups
+    FProgramOSSupportWindows: TPadOSWindowsSet;
+    FProgramOSSupportUnixLinux: TPadOSUnixLinuxSet;
+    FProgramOSSupportOther: TPadOSOtherSet;
+    // Language groups
+    FProgramLanguageEuropean: TPadLangEuropeanSet;
+    FProgramLanguageAsian: TPadLangAsianSet;
+    FProgramLanguageOtherMajor: TPadLangOtherMajorSet;
+    FProgramLanguageWorld: TPadLangWorldSet;
     FProgramChangeInfo: string;
     FProgramSpecificCategory: string;
     FProgramCategoryClass: TPadProgramCategoryClass;
     FProgramSystemRequirements: string;
     FFileInfo: TPadFileInfo;
     FExpireInfo: TPadExpireInfo;
+
     function GetProgramTypeAsString: string;
     procedure SetProgramTypeAsString(const Value: string);
     function GetProgramReleaseStatusAsString: string;
@@ -216,10 +223,22 @@ type
     property ProgramReleaseStatusAsString: string read GetProgramReleaseStatusAsString write SetProgramReleaseStatusAsString;
     property ProgramInstallSupport: TPadInstallSupport read FProgramInstallSupport write FProgramInstallSupport;
     property ProgramInstallSupportAsString: string read GetProgramInstallSupportAsString write SetProgramInstallSupportAsString;
-    property ProgramOSSupport: TPadOSSupport read FProgramOSSupport write FProgramOSSupport;
+
+    // OS Support properties for designer
+    property ProgramOSSupportWindows: TPadOSWindowsSet read FProgramOSSupportWindows write FProgramOSSupportWindows;
+    property ProgramOSSupportUnixLinux: TPadOSUnixLinuxSet read FProgramOSSupportUnixLinux write FProgramOSSupportUnixLinux;
+    property ProgramOSSupportOther: TPadOSOtherSet read FProgramOSSupportOther write FProgramOSSupportOther;
+    // Combined OS Support property for XML
     property ProgramOSSupportAsString: string read GetProgramOSSupportAsString write SetProgramOSSupportAsString;
-    property ProgramLanguage: TPadLanguages read FProgramLanguage write FProgramLanguage;
+
+    // Language properties for designer
+    property ProgramLanguageEuropean: TPadLangEuropeanSet read FProgramLanguageEuropean write FProgramLanguageEuropean;
+    property ProgramLanguageAsian: TPadLangAsianSet read FProgramLanguageAsian write FProgramLanguageAsian;
+    property ProgramLanguageOtherMajor: TPadLangOtherMajorSet read FProgramLanguageOtherMajor write FProgramLanguageOtherMajor;
+    property ProgramLanguageWorld: TPadLangWorldSet read FProgramLanguageWorld write FProgramLanguageWorld;
+    // Combined Language property for XML
     property ProgramLanguageAsString: string read GetProgramLanguageAsString write SetProgramLanguageAsString;
+
     property ProgramChangeInfo: string read FProgramChangeInfo write FProgramChangeInfo;
     property ProgramSpecificCategory: string read FProgramSpecificCategory write FProgramSpecificCategory;
     property ProgramCategoryClass: TPadProgramCategoryClass read FProgramCategoryClass write FProgramCategoryClass;
@@ -360,7 +379,6 @@ type
     property ASP: TPadASP read FASP write FASP;
   end;
 
-
 // Helper functions for conversions
 function GetNodeText(Node: TDOMNode): string;
 
@@ -381,16 +399,39 @@ function StringToPadExpireBasedOn(const Value: string): TPadExpireBasedOn;
 
 function PadProgramCategoryClassToString(Value: TPadProgramCategoryClass): string;
 function StringToPadProgramCategoryClass(const Value: string): TPadProgramCategoryClass;
-function IsValidPadProgramCategoryClassString(const Value: string): Boolean;
+function IsValidPadProgramCategoryClassString(const Value: string): boolean;
 function GetPadProgramCategoryClassDisplayName(Value: TPadProgramCategoryClass): string;
 function GetPadProgramCategoryClassMainCategory(Value: TPadProgramCategoryClass): string;
 function GetPadProgramCategoryClassSubCategory(Value: TPadProgramCategoryClass): string;
 
-function PadOSSupportToString(Value: TPadOSSupport): string;
-function StringToPadOSSupport(const Value: string): TPadOSSupport;
+// OS Support conversion functions
+function PadOSWindowsToString(Value: TPadOSWindows): string;
+function StringToPadOSWindows(const Value: string): TPadOSWindows;
+function PadOSUnixLinuxToString(Value: TPadOSUnixLinux): string;
+function StringToPadOSUnixLinux(const Value: string): TPadOSUnixLinux;
+function PadOSOtherToString(Value: TPadOSOther): string;
+function StringToPadOSOther(const Value: string): TPadOSOther;
 
-function PadLanguagesToString(Value: TPadLanguages): string;
-function StringToPadLanguages(const Value: string): TPadLanguages;
+// Combined OS Support conversion
+function PadOSSupportToString(WindowsSet: TPadOSWindowsSet; UnixLinuxSet: TPadOSUnixLinuxSet; OtherSet: TPadOSOtherSet): string;
+procedure StringToPadOSSupport(const Value: string; out WindowsSet: TPadOSWindowsSet; out UnixLinuxSet: TPadOSUnixLinuxSet;
+  out OtherSet: TPadOSOtherSet);
+
+// Language conversion functions
+function PadLangEuropeanToString(Value: TPadLangEuropean): string;
+function StringToPadLangEuropean(const Value: string): TPadLangEuropean;
+function PadLangAsianToString(Value: TPadLangAsian): string;
+function StringToPadLangAsian(const Value: string): TPadLangAsian;
+function PadLangOtherMajorToString(Value: TPadLangOtherMajor): string;
+function StringToPadLangOtherMajor(const Value: string): TPadLangOtherMajor;
+function PadLangWorldToString(Value: TPadLangWorld): string;
+function StringToPadLangWorld(const Value: string): TPadLangWorld;
+
+// Combined Language conversion
+function PadLanguagesToString(EuropeanSet: TPadLangEuropeanSet; AsianSet: TPadLangAsianSet;
+  OtherMajorSet: TPadLangOtherMajorSet; WorldSet: TPadLangWorldSet): string;
+procedure StringToPadLanguages(const Value: string; out EuropeanSet: TPadLangEuropeanSet; out AsianSet: TPadLangAsianSet;
+  out OtherMajorSet: TPadLangOtherMajorSet; out WorldSet: TPadLangWorldSet);
 
 procedure Register;
 
@@ -424,6 +465,15 @@ begin
   inherited Create;
   FFileInfo := TPadFileInfo.Create;
   FExpireInfo := TPadExpireInfo.Create;
+  // Initialize OS sets
+  FProgramOSSupportWindows := [];
+  FProgramOSSupportUnixLinux := [];
+  FProgramOSSupportOther := [];
+  // Initialize language sets
+  FProgramLanguageEuropean := [];
+  FProgramLanguageAsian := [];
+  FProgramLanguageOtherMajor := [];
+  FProgramLanguageWorld := [];
 end;
 
 destructor TPadProgramInfo.Destroy;
@@ -475,22 +525,23 @@ end;
 
 function TPadProgramInfo.GetProgramOSSupportAsString: string;
 begin
-  Result := PadOSSupportToString(FProgramOSSupport);
+  Result := PadOSSupportToString(FProgramOSSupportWindows, FProgramOSSupportUnixLinux, FProgramOSSupportOther);
 end;
 
 procedure TPadProgramInfo.SetProgramOSSupportAsString(const Value: string);
 begin
-  FProgramOSSupport := StringToPadOSSupport(Value);
+  StringToPadOSSupport(Value, FProgramOSSupportWindows, FProgramOSSupportUnixLinux, FProgramOSSupportOther);
 end;
 
 function TPadProgramInfo.GetProgramLanguageAsString: string;
 begin
-  Result := PadLanguagesToString(FProgramLanguage);
+  Result := PadLanguagesToString(FProgramLanguageEuropean, FProgramLanguageAsian, FProgramLanguageOtherMajor, FProgramLanguageWorld);
 end;
 
 procedure TPadProgramInfo.SetProgramLanguageAsString(const Value: string);
 begin
-  FProgramLanguage := StringToPadLanguages(Value);
+  StringToPadLanguages(Value, FProgramLanguageEuropean, FProgramLanguageAsian,
+    FProgramLanguageOtherMajor, FProgramLanguageWorld);
 end;
 
 { TPadCompanyInfo }
@@ -683,7 +734,11 @@ begin
         FProgramInfo.ProgramTypeAsString := GetNodeValue(Node, 'Program_Type');
         FProgramInfo.ProgramReleaseStatusAsString := GetNodeValue(Node, 'Program_Release_Status');
         FProgramInfo.ProgramInstallSupportAsString := GetNodeValue(Node, 'Program_Install_Support');
+
+        // Load OS Support from string
         FProgramInfo.ProgramOSSupportAsString := GetNodeValue(Node, 'Program_OS_Support');
+
+        // Load Language from string
         FProgramInfo.ProgramLanguageAsString := GetNodeValue(Node, 'Program_Language');
 
         FProgramInfo.ProgramChangeInfo := GetNodeValue(Node, 'Program_Change_Info');
@@ -870,9 +925,9 @@ begin
     SetNodeText(Doc, Node, 'Program_Name', FProgramInfo.ProgramName);
     SetNodeText(Doc, Node, 'Program_Version', FProgramInfo.ProgramVersion);
     SetNodeText(Doc, Node, 'Program_Release_Month',
-      IntToStr(FProgramInfo.ProgramReleaseMonth));
+      IfThen(FProgramInfo.ProgramReleaseMonth = 0, '', Format('%.2d', [FProgramInfo.ProgramReleaseMonth])));
     SetNodeText(Doc, Node, 'Program_Release_Day',
-      IntToStr(FProgramInfo.ProgramReleaseDay));
+      IfThen(FProgramInfo.ProgramReleaseDay = 0, '', Format('%.2d', [FProgramInfo.ProgramReleaseDay])));
     SetNodeText(Doc, Node, 'Program_Release_Year',
       IntToStr(FProgramInfo.ProgramReleaseYear));
     SetNodeText(Doc, Node, 'Program_Cost_Dollars',
@@ -921,9 +976,9 @@ begin
     SetNodeText(Doc, SubNode, 'Expire_Other_Info',
       FProgramInfo.ExpireInfo.ExpireOtherInfo);
     SetNodeText(Doc, SubNode, 'Expire_Month',
-      IfThen(FProgramInfo.ExpireInfo.ExpireMonth = 0, '', IntToStr(FProgramInfo.ExpireInfo.ExpireMonth)));
+      IfThen(FProgramInfo.ExpireInfo.ExpireMonth = 0, '', Format('%.2d', [FProgramInfo.ExpireInfo.ExpireMonth])));
     SetNodeText(Doc, SubNode, 'Expire_Day',
-      IfThen(FProgramInfo.ExpireInfo.ExpireDay = 0, '', IntToStr(FProgramInfo.ExpireInfo.ExpireDay)));
+      IfThen(FProgramInfo.ExpireInfo.ExpireDay = 0, '', Format('%.2d', [FProgramInfo.ExpireInfo.ExpireDay])));
     SetNodeText(Doc, SubNode, 'Expire_Year',
       IfThen(FProgramInfo.ExpireInfo.ExpireYear = 0, '', IntToStr(FProgramInfo.ExpireInfo.ExpireYear)));
 
@@ -1056,8 +1111,18 @@ begin
   FProgramInfo.ProgramType := pptShareware;
   FProgramInfo.ProgramReleaseStatus := prsNewRelease;
   FProgramInfo.ProgramInstallSupport := pisInstallAndUninstall;
-  FProgramInfo.ProgramOSSupport := [];
-  FProgramInfo.ProgramLanguage := [];
+
+  // Clear OS Support sets
+  FProgramInfo.ProgramOSSupportWindows := [];
+  FProgramInfo.ProgramOSSupportUnixLinux := [];
+  FProgramInfo.ProgramOSSupportOther := [];
+
+  // Clear Language sets
+  FProgramInfo.ProgramLanguageEuropean := [];
+  FProgramInfo.ProgramLanguageAsian := [];
+  FProgramInfo.ProgramLanguageOtherMajor := [];
+  FProgramInfo.ProgramLanguageWorld := [];
+
   FProgramInfo.ProgramChangeInfo := '';
   FProgramInfo.ProgramSpecificCategory := '';
   FProgramInfo.ProgramCategoryClass := pccNone;
@@ -1273,11 +1338,6 @@ begin
     Result := pebNone; // Default
 end;
 
-function StringToPadDistributionPermission(const Value: string): string;
-begin
-  Result := Value;
-end;
-
 function PadProgramCategoryClassToString(Value: TPadProgramCategoryClass): string;
 begin
   if (Value >= Low(TPadProgramCategoryClass)) and (Value <= High(TPadProgramCategoryClass)) then
@@ -1290,7 +1350,7 @@ function StringToPadProgramCategoryClass(const Value: string): TPadProgramCatego
 var
   Category: TPadProgramCategoryClass;
 begin
-  // Простой линейный поиск по массиву
+  // Simple linear search through array
   for Category := Low(TPadProgramCategoryClass) to High(TPadProgramCategoryClass) do
   begin
     if SameText(PadProgramCategoryClassStrings[Category], Value) then
@@ -1300,11 +1360,11 @@ begin
     end;
   end;
 
-  // Если не нашли, возвращаем первое значение как значение по умолчанию
+  // If not found, return first value as default
   Result := Low(TPadProgramCategoryClass);
 end;
 
-function IsValidPadProgramCategoryClassString(const Value: string): Boolean;
+function IsValidPadProgramCategoryClassString(const Value: string): boolean;
 var
   Category: TPadProgramCategoryClass;
 begin
@@ -1322,7 +1382,7 @@ end;
 function GetPadProgramCategoryClassDisplayName(Value: TPadProgramCategoryClass): string;
 var
   FullString: string;
-  PosSeparator: Integer;
+  PosSeparator: integer;
 begin
   FullString := PadProgramCategoryClassToString(Value);
   PosSeparator := Pos('::', FullString);
@@ -1335,7 +1395,7 @@ end;
 function GetPadProgramCategoryClassMainCategory(Value: TPadProgramCategoryClass): string;
 var
   FullString: string;
-  PosSeparator: Integer;
+  PosSeparator: integer;
 begin
   FullString := PadProgramCategoryClassToString(Value);
   PosSeparator := Pos('::', FullString);
@@ -1350,40 +1410,109 @@ begin
   Result := GetPadProgramCategoryClassDisplayName(Value);
 end;
 
-function PadOSSupportToString(Value: TPadOSSupport): string;
+// OS Support conversion functions
+function PadOSWindowsToString(Value: TPadOSWindows): string;
+begin
+  if (Value >= Low(TPadOSWindows)) and (Value <= High(TPadOSWindows)) then
+    Result := PadOSWindowsStrings[Value]
+  else
+    Result := '';
+end;
+
+function StringToPadOSWindows(const Value: string): TPadOSWindows;
+var
+  OS: TPadOSWindows;
+begin
+  for OS := Low(TPadOSWindows) to High(TPadOSWindows) do
+  begin
+    if SameText(PadOSWindowsStrings[OS], Value) then
+    begin
+      Result := OS;
+      Exit;
+    end;
+  end;
+  Result := Low(TPadOSWindows);
+end;
+
+function PadOSUnixLinuxToString(Value: TPadOSUnixLinux): string;
+begin
+  if (Value >= Low(TPadOSUnixLinux)) and (Value <= High(TPadOSUnixLinux)) then
+    Result := PadOSUnixLinuxStrings[Value]
+  else
+    Result := '';
+end;
+
+function StringToPadOSUnixLinux(const Value: string): TPadOSUnixLinux;
+var
+  OS: TPadOSUnixLinux;
+begin
+  for OS := Low(TPadOSUnixLinux) to High(TPadOSUnixLinux) do
+  begin
+    if SameText(PadOSUnixLinuxStrings[OS], Value) then
+    begin
+      Result := OS;
+      Exit;
+    end;
+  end;
+  Result := Low(TPadOSUnixLinux);
+end;
+
+function PadOSOtherToString(Value: TPadOSOther): string;
+begin
+  if (Value >= Low(TPadOSOther)) and (Value <= High(TPadOSOther)) then
+    Result := PadOSOtherStrings[Value]
+  else
+    Result := '';
+end;
+
+function StringToPadOSOther(const Value: string): TPadOSOther;
+var
+  OS: TPadOSOther;
+begin
+  for OS := Low(TPadOSOther) to High(TPadOSOther) do
+  begin
+    if SameText(PadOSOtherStrings[OS], Value) then
+    begin
+      Result := OS;
+      Exit;
+    end;
+  end;
+  Result := Low(TPadOSOther);
+end;
+
+// Combined Language conversion
+// Combined OS Support conversion
+function PadOSSupportToString(WindowsSet: TPadOSWindowsSet; UnixLinuxSet: TPadOSUnixLinuxSet; OtherSet: TPadOSOtherSet): string;
 var
   List: TStringList;
-  OS: TPadOS;
+  WinOS: TPadOSWindows;
+  UnixOS: TPadOSUnixLinux;
+  OtherOS: TPadOSOther;
 begin
   List := TStringList.Create;
   try
     List.Delimiter := ',';
     List.StrictDelimiter := True;
 
-    for OS := Low(TPadOS) to High(TPadOS) do
+    // Add Unix/Linux OS
+    for UnixOS := Low(TPadOSUnixLinux) to High(TPadOSUnixLinux) do
     begin
-      if OS in Value then
-      begin
-        case OS of
-          posWindows95: List.Add('Windows 95');
-          posWindows98: List.Add('Windows 98');
-          posWindowsME: List.Add('Windows ME');
-          posWindowsNT: List.Add('Windows NT');
-          posWindows2000: List.Add('Windows 2000');
-          posWindowsXP: List.Add('Windows XP');
-          posWindowsVista: List.Add('Windows Vista');
-          posWindows7: List.Add('Windows 7');
-          posWindows8: List.Add('Windows 8');
-          posWindows10: List.Add('Windows 10');
-          posWindows11: List.Add('Windows 11');
-          posMacOS: List.Add('Mac OS');
-          posLinux: List.Add('Linux');
-          posUnix: List.Add('Unix');
-          posDOS: List.Add('DOS');
-          posOS2: List.Add('OS/2');
-          posOther: List.Add('Other');
-        end;
-      end;
+      if UnixOS in UnixLinuxSet then
+        List.Add(PadOSUnixLinuxStrings[UnixOS]);
+    end;
+
+    // Add Windows OS
+    for WinOS := Low(TPadOSWindows) to High(TPadOSWindows) do
+    begin
+      if WinOS in WindowsSet then
+        List.Add(PadOSWindowsStrings[WinOS]);
+    end;
+
+    // Add Other OS
+    for OtherOS := Low(TPadOSOther) to High(TPadOSOther) do
+    begin
+      if OtherOS in OtherSet then
+        List.Add(PadOSOtherStrings[OtherOS]);
     end;
 
     Result := List.DelimitedText;
@@ -1392,180 +1521,333 @@ begin
   end;
 end;
 
-function StringToPadOSSupport(const Value: string): TPadOSSupport;
+procedure StringToPadOSSupport(const Value: string; out WindowsSet: TPadOSWindowsSet; out UnixLinuxSet: TPadOSUnixLinuxSet;
+  out OtherSet: TPadOSOtherSet);
 var
   OSList: TStringList;
   i: integer;
   OSStr: string;
+  Found: boolean;
+  WinOS: TPadOSWindows;
+  UnixOS: TPadOSUnixLinux;
+  OtherOS: TPadOSOther;
 begin
-  Result := [];
+  WindowsSet := [];
+  UnixLinuxSet := [];
+  OtherSet := [];
+
+  if Trim(Value) = '' then
+    Exit;
+
   OSList := TStringList.Create;
   try
-    // Handle the value - it might be a single OS or comma-separated list
-    if Pos(',', Value) > 0 then
-    begin
-      // Comma-separated list
-      OSList.CommaText := Value;
-    end
-    else
-    begin
-      // Single value
-      OSList.Add(Trim(Value));
-    end;
+    OSList.Delimiter := ',';
+    OSList.StrictDelimiter := True;
+    OSList.DelimitedText := Value;
 
     for i := 0 to OSList.Count - 1 do
     begin
       OSStr := Trim(OSList[i]);
+      Found := False;
 
-      // Check for Windows versions (case insensitive)
-      if SameText(OSStr, 'Windows 10') or SameText(OSStr, 'Win10') or SameText(OSStr, 'Windows10') then
-        Include(Result, posWindows10)
-      else if SameText(OSStr, 'Windows 11') or SameText(OSStr, 'Win11') or SameText(OSStr, 'Windows11') then
-        Include(Result, posWindows11)
-      else if SameText(OSStr, 'Windows 8') or SameText(OSStr, 'Win8') or SameText(OSStr, 'Windows8') then
-        Include(Result, posWindows8)
-      else if SameText(OSStr, 'Windows 7') or SameText(OSStr, 'Win7') or SameText(OSStr, 'Windows7') then
-        Include(Result, posWindows7)
-      else if SameText(OSStr, 'Windows Vista') or SameText(OSStr, 'WinVista') or SameText(OSStr, 'WindowsVista') then
-        Include(Result, posWindowsVista)
-      else if SameText(OSStr, 'Windows XP') or SameText(OSStr, 'WinXP') or SameText(OSStr, 'WindowsXP') then
-        Include(Result, posWindowsXP)
-      else if SameText(OSStr, 'Windows 2000') or SameText(OSStr, 'Win2000') or SameText(OSStr, 'Win2K') or
-        SameText(OSStr, 'Windows2000') then
-        Include(Result, posWindows2000)
-      else if SameText(OSStr, 'Windows NT') or SameText(OSStr, 'WinNT') or SameText(OSStr, 'WindowsNT') then
-        Include(Result, posWindowsNT)
-      else if SameText(OSStr, 'Windows ME') or SameText(OSStr, 'WinME') or SameText(OSStr, 'WindowsME') then
-        Include(Result, posWindowsME)
-      else if SameText(OSStr, 'Windows 98') or SameText(OSStr, 'Win98') or SameText(OSStr, 'Windows98') then
-        Include(Result, posWindows98)
-      else if SameText(OSStr, 'Windows 95') or SameText(OSStr, 'Win95') or SameText(OSStr, 'Windows95') then
-        Include(Result, posWindows95)
-      else if SameText(OSStr, 'Mac OS') or SameText(OSStr, 'MacOS') or SameText(OSStr, 'Mac') then
-        Include(Result, posMacOS)
-      else if SameText(OSStr, 'Linux') then
-        Include(Result, posLinux)
-      else if SameText(OSStr, 'Unix') then
-        Include(Result, posUnix)
-      else if SameText(OSStr, 'DOS') then
-        Include(Result, posDOS)
-      else if SameText(OSStr, 'OS/2') or SameText(OSStr, 'OS2') then
-        Include(Result, posOS2)
-      else if SameText(OSStr, 'Other') then
-        Include(Result, posOther);
+      // Try to find in Windows set
+      for WinOS := Low(TPadOSWindows) to High(TPadOSWindows) do
+      begin
+        if SameText(PadOSWindowsStrings[WinOS], OSStr) then
+        begin
+          Include(WindowsSet, WinOS);
+          Found := True;
+          Break;
+        end;
+      end;
+
+      if not Found then
+      begin
+        // Try to find in Unix/Linux set
+        for UnixOS := Low(TPadOSUnixLinux) to High(TPadOSUnixLinux) do
+        begin
+          if SameText(PadOSUnixLinuxStrings[UnixOS], OSStr) then
+          begin
+            Include(UnixLinuxSet, UnixOS);
+            Found := True;
+            Break;
+          end;
+        end;
+      end;
+
+      if not Found then
+      begin
+        // Try to find in Other set
+        for OtherOS := Low(TPadOSOther) to High(TPadOSOther) do
+        begin
+          if SameText(PadOSOtherStrings[OtherOS], OSStr) then
+          begin
+            Include(OtherSet, OtherOS);
+            Break;
+          end;
+        end;
+      end;
     end;
   finally
     OSList.Free;
   end;
 end;
 
-function PadLanguagesToString(Value: TPadLanguages): string;
+// Language conversion functions
+function PadLangEuropeanToString(Value: TPadLangEuropean): string;
+begin
+  if (Value >= Low(TPadLangEuropean)) and (Value <= High(TPadLangEuropean)) then
+    Result := PadLangEuropeanStrings[Value]
+  else
+    Result := '';
+end;
+
+function StringToPadLangEuropean(const Value: string): TPadLangEuropean;
 var
-  Lang: TPadLanguage;
+  Lang: TPadLangEuropean;
+begin
+  for Lang := Low(TPadLangEuropean) to High(TPadLangEuropean) do
+  begin
+    if SameText(PadLangEuropeanStrings[Lang], Value) then
+    begin
+      Result := Lang;
+      Exit;
+    end;
+  end;
+  Result := Low(TPadLangEuropean);
+end;
+
+function PadLangAsianToString(Value: TPadLangAsian): string;
+begin
+  if (Value >= Low(TPadLangAsian)) and (Value <= High(TPadLangAsian)) then
+    Result := PadLangAsianStrings[Value]
+  else
+    Result := '';
+end;
+
+function StringToPadLangAsian(const Value: string): TPadLangAsian;
+var
+  Lang: TPadLangAsian;
+begin
+  for Lang := Low(TPadLangAsian) to High(TPadLangAsian) do
+  begin
+    if SameText(PadLangAsianStrings[Lang], Value) then
+    begin
+      Result := Lang;
+      Exit;
+    end;
+  end;
+  Result := Low(TPadLangAsian);
+end;
+
+function PadLangOtherMajorToString(Value: TPadLangOtherMajor): string;
+begin
+  if (Value >= Low(TPadLangOtherMajor)) and (Value <= High(TPadLangOtherMajor)) then
+    Result := PadLangOtherMajorStrings[Value]
+  else
+    Result := '';
+end;
+
+function StringToPadLangOtherMajor(const Value: string): TPadLangOtherMajor;
+var
+  Lang: TPadLangOtherMajor;
+begin
+  for Lang := Low(TPadLangOtherMajor) to High(TPadLangOtherMajor) do
+  begin
+    if SameText(PadLangOtherMajorStrings[Lang], Value) then
+    begin
+      Result := Lang;
+      Exit;
+    end;
+  end;
+  Result := Low(TPadLangOtherMajor);
+end;
+
+function PadLangWorldToString(Value: TPadLangWorld): string;
+begin
+  if (Value >= Low(TPadLangWorld)) and (Value <= High(TPadLangWorld)) then
+    Result := PadLangWorldStrings[Value]
+  else
+    Result := '';
+end;
+
+function StringToPadLangWorld(const Value: string): TPadLangWorld;
+var
+  Lang: TPadLangWorld;
+begin
+  for Lang := Low(TPadLangWorld) to High(TPadLangWorld) do
+  begin
+    if SameText(PadLangWorldStrings[Lang], Value) then
+    begin
+      Result := Lang;
+      Exit;
+    end;
+  end;
+  Result := Low(TPadLangWorld);
+end;
+
+// Combined Language conversion
+function PadLanguagesToString(EuropeanSet: TPadLangEuropeanSet; AsianSet: TPadLangAsianSet;
+  OtherMajorSet: TPadLangOtherMajorSet; WorldSet: TPadLangWorldSet): string;
+var
   List: TStringList;
+  TempList: TStringList;
+  i, EnglishIndex: integer;
+  EuroLang: TPadLangEuropean;
+  AsianLang: TPadLangAsian;
+  OtherLang: TPadLangOtherMajor;
+  WorldLang: TPadLangWorld;
 begin
   List := TStringList.Create;
+  TempList := TStringList.Create;
   try
-    for Lang := Low(TPadLanguage) to High(TPadLanguage) do
+    // First pass: collect all selected languages
+    for EuroLang := Low(TPadLangEuropean) to High(TPadLangEuropean) do
     begin
-      if Lang in Value then
+      if EuroLang in EuropeanSet then
+        TempList.Add(PadLangEuropeanStrings[EuroLang]);
+    end;
+
+    for AsianLang := Low(TPadLangAsian) to High(TPadLangAsian) do
+    begin
+      if AsianLang in AsianSet then
+        TempList.Add(PadLangAsianStrings[AsianLang]);
+    end;
+
+    for OtherLang := Low(TPadLangOtherMajor) to High(TPadLangOtherMajor) do
+    begin
+      if OtherLang in OtherMajorSet then
+        TempList.Add(PadLangOtherMajorStrings[OtherLang]);
+    end;
+
+    for WorldLang := Low(TPadLangWorld) to High(TPadLangWorld) do
+    begin
+      if WorldLang in WorldSet then
+        TempList.Add(PadLangWorldStrings[WorldLang]);
+    end;
+
+    // Sort alphabetically
+    TempList.Sort;
+
+    // Separate English from the list
+    EnglishIndex := -1;
+    for i := 0 to TempList.Count - 1 do
+    begin
+      if SameText(TempList[i], 'English') then
       begin
-        case Lang of
-          plEnglish: List.Add('English');
-          plFrench: List.Add('French');
-          plGerman: List.Add('German');
-          plSpanish: List.Add('Spanish');
-          plItalian: List.Add('Italian');
-          plDutch: List.Add('Dutch');
-          plPortuguese: List.Add('Portuguese');
-          plSwedish: List.Add('Swedish');
-          plDanish: List.Add('Danish');
-          plNorwegian: List.Add('Norwegian');
-          plFinnish: List.Add('Finnish');
-          plRussian: List.Add('Russian');
-          plJapanese: List.Add('Japanese');
-          plChinese: List.Add('Chinese');
-          plKorean: List.Add('Korean');
-          plArabic: List.Add('Arabic');
-          plHebrew: List.Add('Hebrew');
-          plGreek: List.Add('Greek');
-          plTurkish: List.Add('Turkish');
-          plPolish: List.Add('Polish');
-          plCzech: List.Add('Czech');
-          plHungarian: List.Add('Hungarian');
-          plRomanian: List.Add('Romanian');
-          plBulgarian: List.Add('Bulgarian');
-        end;
+        EnglishIndex := i;
+        Break;
       end;
     end;
-    Result := List.CommaText;
+
+    // Configure result list
+    List.Delimiter := ',';
+    List.StrictDelimiter := True;
+
+    // Add English first if found
+    if EnglishIndex >= 0 then
+    begin
+      List.Add(TempList[EnglishIndex]);
+      // Remove English from temp list
+      TempList.Delete(EnglishIndex);
+    end;
+
+    // Add all other languages (already sorted alphabetically)
+    for i := 0 to TempList.Count - 1 do
+    begin
+      List.Add(TempList[i]);
+    end;
+
+    Result := List.DelimitedText;
   finally
+    TempList.Free;
     List.Free;
   end;
 end;
 
-function StringToPadLanguages(const Value: string): TPadLanguages;
+procedure StringToPadLanguages(const Value: string; out EuropeanSet: TPadLangEuropeanSet; out AsianSet: TPadLangAsianSet;
+  out OtherMajorSet: TPadLangOtherMajorSet; out WorldSet: TPadLangWorldSet);
 var
-  List: TStringList;
+  LangList: TStringList;
   i: integer;
+  LangStr: string;
+  Found: boolean;
+  EuroLang: TPadLangEuropean;
+  AsianLang: TPadLangAsian;
+  OtherLang: TPadLangOtherMajor;
+  WorldLang: TPadLangWorld;
 begin
-  Result := [];
-  List := TStringList.Create;
+  EuropeanSet := [];
+  AsianSet := [];
+  OtherMajorSet := [];
+  WorldSet := [];
+
+  if Trim(Value) = '' then
+    Exit;
+
+  LangList := TStringList.Create;
   try
-    List.CommaText := Value;
-    for i := 0 to List.Count - 1 do
+    LangList.CommaText := Value;
+
+    for i := 0 to LangList.Count - 1 do
     begin
-      if List[i] = 'English' then
-        Include(Result, plEnglish)
-      else if List[i] = 'French' then
-        Include(Result, plFrench)
-      else if List[i] = 'German' then
-        Include(Result, plGerman)
-      else if List[i] = 'Spanish' then
-        Include(Result, plSpanish)
-      else if List[i] = 'Italian' then
-        Include(Result, plItalian)
-      else if List[i] = 'Dutch' then
-        Include(Result, plDutch)
-      else if List[i] = 'Portuguese' then
-        Include(Result, plPortuguese)
-      else if List[i] = 'Swedish' then
-        Include(Result, plSwedish)
-      else if List[i] = 'Danish' then
-        Include(Result, plDanish)
-      else if List[i] = 'Norwegian' then
-        Include(Result, plNorwegian)
-      else if List[i] = 'Finnish' then
-        Include(Result, plFinnish)
-      else if List[i] = 'Russian' then
-        Include(Result, plRussian)
-      else if List[i] = 'Japanese' then
-        Include(Result, plJapanese)
-      else if List[i] = 'Chinese' then
-        Include(Result, plChinese)
-      else if List[i] = 'Korean' then
-        Include(Result, plKorean)
-      else if List[i] = 'Arabic' then
-        Include(Result, plArabic)
-      else if List[i] = 'Hebrew' then
-        Include(Result, plHebrew)
-      else if List[i] = 'Greek' then
-        Include(Result, plGreek)
-      else if List[i] = 'Turkish' then
-        Include(Result, plTurkish)
-      else if List[i] = 'Polish' then
-        Include(Result, plPolish)
-      else if List[i] = 'Czech' then
-        Include(Result, plCzech)
-      else if List[i] = 'Hungarian' then
-        Include(Result, plHungarian)
-      else if List[i] = 'Romanian' then
-        Include(Result, plRomanian)
-      else if List[i] = 'Bulgarian' then
-        Include(Result, plBulgarian);
+      LangStr := Trim(LangList[i]);
+      Found := False;
+
+      // Try to find in European set
+      for EuroLang := Low(TPadLangEuropean) to High(TPadLangEuropean) do
+      begin
+        if SameText(PadLangEuropeanStrings[EuroLang], LangStr) then
+        begin
+          Include(EuropeanSet, EuroLang);
+          Found := True;
+          Break;
+        end;
+      end;
+
+      if not Found then
+      begin
+        // Try to find in Asian set
+        for AsianLang := Low(TPadLangAsian) to High(TPadLangAsian) do
+        begin
+          if SameText(PadLangAsianStrings[AsianLang], LangStr) then
+          begin
+            Include(AsianSet, AsianLang);
+            Found := True;
+            Break;
+          end;
+        end;
+      end;
+
+      if not Found then
+      begin
+        // Try to find in Other Major set
+        for OtherLang := Low(TPadLangOtherMajor) to High(TPadLangOtherMajor) do
+        begin
+          if SameText(PadLangOtherMajorStrings[OtherLang], LangStr) then
+          begin
+            Include(OtherMajorSet, OtherLang);
+            Found := True;
+            Break;
+          end;
+        end;
+      end;
+
+      if not Found then
+      begin
+        // Try to find in World set
+        for WorldLang := Low(TPadLangWorld) to High(TPadLangWorld) do
+        begin
+          if SameText(PadLangWorldStrings[WorldLang], LangStr) then
+          begin
+            Include(WorldSet, WorldLang);
+            Break;
+          end;
+        end;
+      end;
     end;
   finally
-    List.Free;
+    LangList.Free;
   end;
 end;
 

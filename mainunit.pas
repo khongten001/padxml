@@ -50,7 +50,7 @@ begin
   PadFormat := TPadFormat.Create(Self);
   with TStringList.Create do
   try
-    LoadFromFile('E:\padxml\samples\pad3.11.xml');
+    LoadFromFile('E:\padxml\samples\pad4.0.xml');
     XMLContent := Text;
     PadFormat.LoadFromXML(XMLContent);
   finally
@@ -67,7 +67,7 @@ begin
   with TStringList.Create do
   try
     Text := PadFormat.SaveToXML;
-    SaveToFile('E:\padxml\samples\_pad3.11.xml');
+    SaveToFile('E:\padxml\samples\_pad4.0.xml');
   finally
     Free;
   end;

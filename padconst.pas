@@ -45,7 +45,6 @@ type
     pebOther
     );
 
-type
   TPadProgramCategoryClass = (
     pccNone,
     // Audio & Multimedia
@@ -232,7 +231,56 @@ type
     pccWebDevelopment_XMLCSSTools
     );
 
-  TPadLanguage = (
+  // Operating Systems - split into logical groups based on original list
+  // Unix/Linux/Mac family (12 items)
+  TPadOSUnixLinux = (
+    posAndroid,
+    posBlackBerry,
+    posHandheldMobileOther,
+    posiPhone,
+    posiPad,
+    posiPod,
+    posiTouch,
+    posJava,
+    posLinux,
+    posLinuxConsole,
+    posLinuxGnome,
+    posLinuxGPL,
+    posLinuxOpenSource,
+    posMacOSX,
+    posMacOther,
+    posMSDOS,
+    posNetware,
+    posOpenVMS,
+    posPalm,
+    posPocketPC,
+    posSymbian,
+    posUnix
+    );
+
+  // Windows family (14 items)
+  TPadOSWindows = (
+    posWin2000,
+    posWin7x32,
+    posWin7x64,
+    posWin98,
+    posWinMobile,
+    posWinOther,
+    posWinServer,
+    posWinVista,
+    posWinVistax64,
+    posWinXP
+    );
+
+  // Mobile and Embedded (12 items)
+  TPadOSOther = (
+    posOther,
+    posNotApplicable
+    );
+
+  // Language groups - split by geographic regions
+  // European languages (31 items)
+  TPadLangEuropean = (
     plEnglish,
     plFrench,
     plGerman,
@@ -245,44 +293,137 @@ type
     plNorwegian,
     plFinnish,
     plRussian,
-    plJapanese,
-    plChinese,
-    plKorean,
-    plArabic,
-    plHebrew,
-    plGreek,
-    plTurkish,
     plPolish,
     plCzech,
     plHungarian,
     plRomanian,
-    plBulgarian
+    plBulgarian,
+    plGreek,
+    plTurkish,
+    plAlbanian,
+    plCroatian,
+    plSerbian,
+    plSlovak,
+    plSlovenian,
+    plUkrainian,
+    plBelarusian,
+    plLithuanian,
+    plLatvian,
+    plEstonian,
+    plIcelandic,
+    plMaltese
     );
 
-  TPadLanguages = set of TPadLanguage;
-
-  // OS support - this will be a set
-  TPadOS = (
-    posWindows95,
-    posWindows98,
-    posWindowsME,
-    posWindowsNT,
-    posWindows2000,
-    posWindowsXP,
-    posWindowsVista,
-    posWindows7,
-    posWindows8,
-    posWindows10,
-    posWindows11,
-    posMacOS,
-    posLinux,
-    posUnix,
-    posDOS,
-    posOS2,
-    posOther
+  // Asian languages (29 items)
+  TPadLangAsian = (
+    plJapanese,
+    plChinese,
+    plChineseSimplified,
+    plChineseTraditional,
+    plKorean,
+    plArabic,
+    plHebrew,
+    plHindi,
+    plBengali,
+    plUrdu,
+    plPersian,
+    plThai,
+    plVietnamese,
+    plIndonesian,
+    plMalay,
+    plFilipino,
+    plBurmese,
+    plCambodian,
+    plLao,
+    plMongolian,
+    plNepali,
+    plSinhalese,
+    plTamil,
+    plTelugu,
+    plMarathi,
+    plGujarati,
+    plPunjabi,
+    plKannada,
+    plMalayalam
     );
 
-  TPadOSSupport = set of TPadOS;
+  // Other major languages (27 items)
+  TPadLangOtherMajor = (
+    plAfrikaans,
+    plAmharic,
+    plArmenian,
+    plAzerbaijani,
+    plBasque,
+    plCatalan,
+    plEsperanto,
+    plFarsi,
+    plGeorgian,
+    plHausa,
+    plIrish,
+    plKazakh,
+    plKyrgyz,
+    plLatin,
+    plLuxembourgish,
+    plMacedonian,
+    plMaori,
+    plPashto,
+    plRomansh,
+    plSanskrit,
+    plScottishGaelic,
+    plSwahili,
+    plTajik,
+    plTatar,
+    plTurkmen,
+    plUzbek,
+    plWelsh
+    );
+
+  // Additional world languages (32 items)
+  TPadLangWorld = (
+    plAkan,
+    plAssamese,
+    plAymara,
+    plBambara,
+    plBashkir,
+    plBelarusianLatin,
+    plBislama,
+    plBosnian,
+    plBreton,
+    plChichewa,
+    plCorsican,
+    plDivehi,
+    plDzongkha,
+    plFaroese,
+    plFijian,
+    plGalician,
+    plGreenlandic,
+    plGuarani,
+    plHaitianCreole,
+    plHawaiian,
+    plInuktitut,
+    plJavanese,
+    plKinyarwanda,
+    plKurdish,
+    plLingala,
+    plMalagasy,
+    plMarshallese,
+    plNauru,
+    plOromo,
+    plQuechua,
+    plSamoan,
+    plYoruba
+    );
+
+  // Sets for OS groups
+  TPadOSUnixLinuxSet = set of TPadOSUnixLinux;
+  TPadOSWindowsSet = set of TPadOSWindows;
+  TPadOSOtherSet = set of TPadOSOther;
+
+  // Sets for language groups
+  TPadLangEuropeanSet = set of TPadLangEuropean;
+  TPadLangAsianSet = set of TPadLangAsian;
+  TPadLangOtherMajorSet = set of TPadLangOtherMajor;
+  TPadLangWorldSet = set of TPadLangWorld;
 
 const
   CategoryCount = Ord(High(TPadProgramCategoryClass)) - Ord(Low(TPadProgramCategoryClass)) + 1;
@@ -471,6 +612,181 @@ const
     'Web Development::Site Administration',
     'Web Development::Wizards & Components',
     'Web Development::XML/CSS Tools'
+    );
+
+  PadOSUnixLinuxStrings: array[TPadOSUnixLinux] of string = (
+    'Android',
+    'BlackBerry',
+    'Handheld/Mobile Other',
+    'iPhone',
+    'iPad',
+    'iPod',
+    'iTouch',
+    'Java',
+    'Linux',
+    'Linux Console',
+    'Linux Gnome',
+    'Linux GPL',
+    'Linux Open Source',
+    'Mac OS X',
+    'Mac Other',
+    'MS-DOS',
+    'Netware',
+    'OpenVMS',
+    'Palm',
+    'Pocket PC',
+    'Symbian',
+    'Unix'
+    );
+
+  // String arrays for OS groups - based on original list from ProgramOs.txt
+  PadOSWindowsStrings: array[TPadOSWindows] of string = (
+    'Win2000',
+    'Win7 x32',
+    'Win7 x64',
+    'Win98',
+    'WinMobile',
+    'WinOther',
+    'WinServer',
+    'WinVista',
+    'WinVista x64',
+    'WinXP'
+    );
+
+  PadOSOtherStrings: array[TPadOSOther] of string = (
+    'Other',
+    'Not Applicable');
+
+  // String arrays for language groups
+  PadLangEuropeanStrings: array[TPadLangEuropean] of string = (
+    'English',
+    'French',
+    'German',
+    'Spanish',
+    'Italian',
+    'Dutch',
+    'Portuguese',
+    'Swedish',
+    'Danish',
+    'Norwegian',
+    'Finnish',
+    'Russian',
+    'Polish',
+    'Czech',
+    'Hungarian',
+    'Romanian',
+    'Bulgarian',
+    'Greek',
+    'Turkish',
+    'Albanian',
+    'Croatian',
+    'Serbian',
+    'Slovak',
+    'Slovenian',
+    'Ukrainian',
+    'Byelorussian',
+    'Lithuanian',
+    'Latvian',
+    'Estonian',
+    'Icelandic',
+    'Maltese'
+    );
+
+  PadLangAsianStrings: array[TPadLangAsian] of string = (
+    'Japanese',
+    'Chinese',
+    'Chinese Simplified',
+    'Chinese Traditional',
+    'Korean',
+    'Arabic',
+    'Hebrew',
+    'Hindi',
+    'Bengali',
+    'Urdu',
+    'Persian',
+    'Thai',
+    'Vietnamese',
+    'Indonesian',
+    'Malay',
+    'Filipino',
+    'Burmese',
+    'Cambodian',
+    'Lao',
+    'Mongolian',
+    'Nepali',
+    'Sinhalese',
+    'Tamil',
+    'Telugu',
+    'Marathi',
+    'Gujarati',
+    'Punjabi',
+    'Kannada',
+    'Malayalam'
+    );
+
+  PadLangOtherMajorStrings: array[TPadLangOtherMajor] of string = (
+    'Afrikaans',
+    'Amharic',
+    'Armenian',
+    'Azerbaijani',
+    'Basque',
+    'Catalan',
+    'Esperanto',
+    'Farsi',
+    'Georgian',
+    'Hausa',
+    'Irish',
+    'Kazakh',
+    'Kyrgyz',
+    'Latin',
+    'Luxembourgish',
+    'Macedonian',
+    'Maori',
+    'Pashto',
+    'Romansh',
+    'Sanskrit',
+    'Scottish Gaelic',
+    'Swahili',
+    'Tajik',
+    'Tatar',
+    'Turkmen',
+    'Uzbek',
+    'Welsh'
+    );
+
+  PadLangWorldStrings: array[TPadLangWorld] of string = (
+    'Akan',
+    'Assamese',
+    'Aymara',
+    'Bambara',
+    'Bashkir',
+    'Belarusian (Latin)',
+    'Bislama',
+    'Bosnian',
+    'Breton',
+    'Chichewa',
+    'Corsican',
+    'Divehi',
+    'Dzongkha',
+    'Faroese',
+    'Fijian',
+    'Galician',
+    'Greenlandic',
+    'Guarani',
+    'Haitian Creole',
+    'Hawaiian',
+    'Inuktitut',
+    'Javanese',
+    'Kinyarwanda',
+    'Kurdish',
+    'Lingala',
+    'Malagasy',
+    'Marshallese',
+    'Nauru',
+    'Oromo',
+    'Quechua',
+    'Samoan',
+    'Yoruba'
     );
 
 implementation

@@ -630,7 +630,7 @@ var
   var
     TempNode: TDOMNode;
   begin
-    TempNode := Parent.FindNode(NodeName);
+    TempNode := Parent.FindNode(DOMString(NodeName));
     if Assigned(TempNode) then
       Result := GetNodeText(TempNode)
     else
@@ -1174,21 +1174,21 @@ end;
 
 function TPadFormat.SetNodeText(Doc: TXMLDocument; ParentNode: TDOMNode; NodeName, NodeValue: string): TDOMNode;
 begin
-  Result := Doc.CreateElement(NodeName);
-  TDOMElement(Result).TextContent := NodeValue;
+  Result := Doc.CreateElement(DOMString(NodeName));
+  TDOMElement(Result).TextContent := DOMString(NodeValue);
   ParentNode.AppendChild(Result);
 end;
 
 function TPadFormat.AddChildNode(ParentNode: TDOMNode; NodeName: string): TDOMNode;
 begin
-  Result := ParentNode.OwnerDocument.CreateElement(NodeName);
+  Result := ParentNode.OwnerDocument.CreateElement(DOMString(NodeName));
   ParentNode.AppendChild(Result);
 end;
 
 procedure TPadFormat.SetNodeTextValue(Node: TDOMNode; Value: string);
 begin
   if Assigned(Node) then
-    TDOMElement(Node).TextContent := Value;
+    TDOMElement(Node).TextContent := DOMString(Value);
 end;
 
 // Helper functions implementation
@@ -1196,7 +1196,7 @@ end;
 function GetNodeText(Node: TDOMNode): string;
 begin
   if Assigned(Node) and Assigned(Node.FirstChild) then
-    Result := Node.FirstChild.NodeValue
+    Result := UTF8Encode(Node.FirstChild.NodeValue)
   else
     Result := '';
 end;
@@ -1235,6 +1235,8 @@ begin
     pisInstallOnly: Result := 'Install Only';
     pisNoInstallSupport: Result := 'No Install Support';
     pisUninstallOnly: Result := 'Uninstall Only';
+    else
+      Result := '';
   end;
 end;
 
@@ -1262,6 +1264,8 @@ begin
     pptDemo: Result := 'Demo';
     pptCommercial: Result := 'Commercial';
     pptDataOnly: Result := 'Data Only';
+    else
+      Result := '';
   end;
 end;
 
@@ -1292,6 +1296,8 @@ begin
     prsBeta: Result := 'Beta';
     prsAlpha: Result := 'Alpha';
     prsMediaOnly: Result := 'Media Only';
+    else
+      Result := '';
   end;
 end;
 
@@ -1321,6 +1327,8 @@ begin
     pebRuns: Result := 'Runs';
     pebDate: Result := 'Date';
     pebOther: Result := 'Other';
+    else
+      Result := '';
   end;
 end;
 

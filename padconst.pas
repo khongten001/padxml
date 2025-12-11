@@ -263,13 +263,22 @@ type
     posWin2000,
     posWin7x32,
     posWin7x64,
+    posWin95,
     posWin98,
+    posWinME,
+    posWinNT4x,
+    posWindows2000,
     posWinMobile,
     posWinOther,
     posWinServer,
     posWinVista,
     posWinVistax64,
-    posWinXP
+    posWinXP,
+    posWindows2003,
+    posWindows8,
+    posWindows10,
+    posWindows11,
+    posWindows12
     );
 
   // Mobile and Embedded (12 items)
@@ -644,13 +653,22 @@ const
     'Win2000',
     'Win7 x32',
     'Win7 x64',
+    'Win95',
     'Win98',
+    'WinME',
+    'WinNT 4.x',
+    'Windows2000',
     'WinMobile',
     'WinOther',
     'WinServer',
     'WinVista',
     'WinVista x64',
-    'WinXP'
+    'WinXP',
+    'Windows 2003',
+    'Windows 8',
+    'Windows 10',
+    'Windows 11',
+    'Windows 12'
     );
 
   PadOSOtherStrings: array[TPadOSOther] of string = (

@@ -5,97 +5,10 @@ unit padformat;
 interface
 
 uses
-  Classes, SysUtils, DOM, XMLRead, XMLWrite, TypInfo, StrUtils;
+  Classes, SysUtils, DOM, XMLRead, XMLWrite, TypInfo, StrUtils, padconst;
 
 type
-  // Enumerations for PAD standard values
-  TPadInstallSupport = (
-    pisInstallAndUninstall,
-    pisInstallOnly,
-    pisNoInstallSupport,
-    pisUninstallOnly
-    );
 
-  TPadProgramType = (
-    pptNone,
-    pptShareware,
-    pptFreeware,
-    pptAdware,
-    pptDemo,
-    pptCommercial,
-    pptDataOnly
-    );
-
-  TPadReleaseStatus = (
-    prsNone,
-    prsMajorUpdate,
-    prsMinorUpdate,
-    prsNewRelease,
-    prsBeta,
-    prsAlpha,
-    prsMediaOnly
-    );
-
-  TPadExpireBasedOn = (
-    pebNone,
-    pebDays,
-    pebRuns,
-    pebDate,
-    pebOther
-    );
-
-  // Language support - this will be a set
-  TPadLanguage = (
-    plEnglish,
-    plFrench,
-    plGerman,
-    plSpanish,
-    plItalian,
-    plDutch,
-    plPortuguese,
-    plSwedish,
-    plDanish,
-    plNorwegian,
-    plFinnish,
-    plRussian,
-    plJapanese,
-    plChinese,
-    plKorean,
-    plArabic,
-    plHebrew,
-    plGreek,
-    plTurkish,
-    plPolish,
-    plCzech,
-    plHungarian,
-    plRomanian,
-    plBulgarian
-    );
-
-  TPadLanguages = set of TPadLanguage;
-
-  // OS support - this will be a set
-  TPadOS = (
-    posWindows95,
-    posWindows98,
-    posWindowsME,
-    posWindowsNT,
-    posWindows2000,
-    posWindowsXP,
-    posWindowsVista,
-    posWindows7,
-    posWindows8,
-    posWindows10,
-    posWindows11,
-    posMacOS,
-    posLinux,
-    posUnix,
-    posDOS,
-    posOS2,
-    posOther
-    );
-
-  TPadOSSupport = set of TPadOS;
 
   // Forward declarations
   TPadContactInfo = class;
@@ -269,7 +182,7 @@ type
     FProgramLanguage: TPadLanguages;
     FProgramChangeInfo: string;
     FProgramSpecificCategory: string;
-    FProgramCategoryClass: string;
+    FProgramCategoryClass: TPadProgramCategoryClass;
     FProgramSystemRequirements: string;
     FFileInfo: TPadFileInfo;
     FExpireInfo: TPadExpireInfo;
@@ -279,6 +192,8 @@ type
     procedure SetProgramReleaseStatusAsString(const Value: string);
     function GetProgramInstallSupportAsString: string;
     procedure SetProgramInstallSupportAsString(const Value: string);
+    function GetProgramCategoryClassAsString: string;
+    procedure SetProgramCategoryClassAsString(const Value: string);
     function GetProgramOSSupportAsString: string;
     procedure SetProgramOSSupportAsString(const Value: string);
     function GetProgramLanguageAsString: string;
@@ -307,7 +222,8 @@ type
     property ProgramLanguageAsString: string read GetProgramLanguageAsString write SetProgramLanguageAsString;
     property ProgramChangeInfo: string read FProgramChangeInfo write FProgramChangeInfo;
     property ProgramSpecificCategory: string read FProgramSpecificCategory write FProgramSpecificCategory;
-    property ProgramCategoryClass: string read FProgramCategoryClass write FProgramCategoryClass;
+    property ProgramCategoryClass: TPadProgramCategoryClass read FProgramCategoryClass write FProgramCategoryClass;
+    property ProgramCategoryClassAsString: string read GetProgramCategoryClassAsString write SetProgramCategoryClassAsString;
     property ProgramSystemRequirements: string read FProgramSystemRequirements write FProgramSystemRequirements;
     property FileInfo: TPadFileInfo read FFileInfo write FFileInfo;
     property ExpireInfo: TPadExpireInfo read FExpireInfo write FExpireInfo;
@@ -444,6 +360,7 @@ type
     property ASP: TPadASP read FASP write FASP;
   end;
 
+
 // Helper functions for conversions
 function GetNodeText(Node: TDOMNode): string;
 
@@ -461,6 +378,13 @@ function StringToPadReleaseStatus(const Value: string): TPadReleaseStatus;
 
 function PadExpireBasedOnToString(Value: TPadExpireBasedOn): string;
 function StringToPadExpireBasedOn(const Value: string): TPadExpireBasedOn;
+
+function PadProgramCategoryClassToString(Value: TPadProgramCategoryClass): string;
+function StringToPadProgramCategoryClass(const Value: string): TPadProgramCategoryClass;
+function IsValidPadProgramCategoryClassString(const Value: string): Boolean;
+function GetPadProgramCategoryClassDisplayName(Value: TPadProgramCategoryClass): string;
+function GetPadProgramCategoryClassMainCategory(Value: TPadProgramCategoryClass): string;
+function GetPadProgramCategoryClassSubCategory(Value: TPadProgramCategoryClass): string;
 
 function PadOSSupportToString(Value: TPadOSSupport): string;
 function StringToPadOSSupport(const Value: string): TPadOSSupport;
@@ -537,6 +461,16 @@ end;
 procedure TPadProgramInfo.SetProgramInstallSupportAsString(const Value: string);
 begin
   FProgramInstallSupport := StringToPadInstallSupport(Value);
+end;
+
+function TPadProgramInfo.GetProgramCategoryClassAsString: string;
+begin
+  Result := PadProgramCategoryClassToString(FProgramCategoryClass);
+end;
+
+procedure TPadProgramInfo.SetProgramCategoryClassAsString(const Value: string);
+begin
+  FProgramCategoryClass := StringToPadProgramCategoryClass(Value);
 end;
 
 function TPadProgramInfo.GetProgramOSSupportAsString: string;
@@ -754,7 +688,7 @@ begin
 
         FProgramInfo.ProgramChangeInfo := GetNodeValue(Node, 'Program_Change_Info');
         FProgramInfo.ProgramSpecificCategory := GetNodeValue(Node, 'Program_Specific_Category');
-        FProgramInfo.ProgramCategoryClass := GetNodeValue(Node, 'Program_Category_Class');
+        FProgramInfo.ProgramCategoryClassAsString := GetNodeValue(Node, 'Program_Category_Class');
         FProgramInfo.ProgramSystemRequirements := GetNodeValue(Node, 'Program_System_Requirements');
 
         // Load File Info
@@ -962,7 +896,7 @@ begin
     SetNodeText(Doc, Node, 'Program_Specific_Category',
       FProgramInfo.ProgramSpecificCategory);
     SetNodeText(Doc, Node, 'Program_Category_Class',
-      FProgramInfo.ProgramCategoryClass);
+      FProgramInfo.ProgramCategoryClassAsString);
     SetNodeText(Doc, Node, 'Program_System_Requirements',
       FProgramInfo.ProgramSystemRequirements);
 
@@ -1126,7 +1060,7 @@ begin
   FProgramInfo.ProgramLanguage := [];
   FProgramInfo.ProgramChangeInfo := '';
   FProgramInfo.ProgramSpecificCategory := '';
-  FProgramInfo.ProgramCategoryClass := '';
+  FProgramInfo.ProgramCategoryClass := pccNone;
   FProgramInfo.ProgramSystemRequirements := '';
 
   // Clear File Info
@@ -1342,6 +1276,78 @@ end;
 function StringToPadDistributionPermission(const Value: string): string;
 begin
   Result := Value;
+end;
+
+function PadProgramCategoryClassToString(Value: TPadProgramCategoryClass): string;
+begin
+  if (Value >= Low(TPadProgramCategoryClass)) and (Value <= High(TPadProgramCategoryClass)) then
+    Result := PadProgramCategoryClassStrings[Value]
+  else
+    Result := '';
+end;
+
+function StringToPadProgramCategoryClass(const Value: string): TPadProgramCategoryClass;
+var
+  Category: TPadProgramCategoryClass;
+begin
+  // Простой линейный поиск по массиву
+  for Category := Low(TPadProgramCategoryClass) to High(TPadProgramCategoryClass) do
+  begin
+    if SameText(PadProgramCategoryClassStrings[Category], Value) then
+    begin
+      Result := Category;
+      Exit;
+    end;
+  end;
+
+  // Если не нашли, возвращаем первое значение как значение по умолчанию
+  Result := Low(TPadProgramCategoryClass);
+end;
+
+function IsValidPadProgramCategoryClassString(const Value: string): Boolean;
+var
+  Category: TPadProgramCategoryClass;
+begin
+  Result := False;
+  for Category := Low(TPadProgramCategoryClass) to High(TPadProgramCategoryClass) do
+  begin
+    if SameText(PadProgramCategoryClassStrings[Category], Value) then
+    begin
+      Result := True;
+      Exit;
+    end;
+  end;
+end;
+
+function GetPadProgramCategoryClassDisplayName(Value: TPadProgramCategoryClass): string;
+var
+  FullString: string;
+  PosSeparator: Integer;
+begin
+  FullString := PadProgramCategoryClassToString(Value);
+  PosSeparator := Pos('::', FullString);
+  if PosSeparator > 0 then
+    Result := Copy(FullString, PosSeparator + 2, Length(FullString))
+  else
+    Result := FullString;
+end;
+
+function GetPadProgramCategoryClassMainCategory(Value: TPadProgramCategoryClass): string;
+var
+  FullString: string;
+  PosSeparator: Integer;
+begin
+  FullString := PadProgramCategoryClassToString(Value);
+  PosSeparator := Pos('::', FullString);
+  if PosSeparator > 0 then
+    Result := Copy(FullString, 1, PosSeparator - 1)
+  else
+    Result := FullString;
+end;
+
+function GetPadProgramCategoryClassSubCategory(Value: TPadProgramCategoryClass): string;
+begin
+  Result := GetPadProgramCategoryClassDisplayName(Value);
 end;
 
 function PadOSSupportToString(Value: TPadOSSupport): string;

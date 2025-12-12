@@ -45,6 +45,22 @@ type
     pebOther
     );
 
+  TPadNewsFeedType = (
+    pnftNone,
+    pnftRSS090,
+    pnftRSS091,
+    pnftRSS092,
+    pnftRSS093,
+    pnftRSS094,
+    pnftRSS10,
+    pnftRSS20,
+    pnftAtom03,
+    pnftAtom10,
+    pnftAtom,
+    pnftCDF,
+    pnftOther
+    );
+
   TPadProgramCategoryClass = (
     pccNone,
     // Audio & Multimedia
@@ -437,6 +453,23 @@ type
 const
   CategoryCount = Ord(High(TPadProgramCategoryClass)) - Ord(Low(TPadProgramCategoryClass)) + 1;
 
+  // News Feed Type strings
+  PadNewsFeedTypeStrings: array[TPadNewsFeedType] of string = (
+    '',
+    'RSS 0.90',
+    'RSS 0.91',
+    'RSS 0.92',
+    'RSS 0.93',
+    'RSS 0.94',
+    'RSS 1.0',
+    'RSS 2.0',
+    'Atom 0.3',
+    'Atom 1.0',
+    'Atom',
+    'CDF',
+    'Other'
+    );
+
   PadProgramCategoryClassStrings: array[TPadProgramCategoryClass] of string = (
     '',
     // Audio & Multimedia
@@ -664,7 +697,7 @@ const
     'WinVista',
     'WinVista x64',
     'WinXP',
-    'Windows 2003',
+    'Windows2003',
     'Windows 8',
     'Windows 10',
     'Windows 11',

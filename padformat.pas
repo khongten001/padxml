@@ -5,10 +5,16 @@ unit padformat;
 interface
 
 uses
-  Classes, SysUtils, DOM, XMLRead, XMLWrite, TypInfo, StrUtils, padconst;
+  Classes,
+  SysUtils,
+  StrUtils,
+  TypInfo,
+  DOM,
+  XMLRead,
+  XMLWrite,
+  padconst;
 
 type
-
   // Forward declarations
   TPadContactInfo = class;
   TPadSupportInfo = class;
@@ -24,12 +30,14 @@ type
     FVersion: double;
     FMasterPadVersion: string;
     FMasterPadEditor: string;
+    FMasterPadEditorUrl: string;
     FMasterPadInfo: string;
     procedure SetMasterPadVersion(Value: string);
   published
     property Version: double read FVersion write FVersion;
     property MasterPadVersion: string read FMasterPadVersion write SetMasterPadVersion;
     property MasterPadEditor: string read FMasterPadEditor write FMasterPadEditor;
+    property MasterPadEditorUrl: string read FMasterPadEditorUrl write FMasterPadEditorUrl;
     property MasterPadInfo: string read FMasterPadInfo write FMasterPadInfo;
   end;
 
@@ -113,19 +121,69 @@ type
   { TPadNewsFeed }
   TPadNewsFeed = class(TPersistent)
   private
-    FNewsFeedFeedURL: string;
-    FNewsFeedType: string;
-    FNewsFeedTitle: string;
-    FNewsFeedKeywords: string;
-    FNewsFeedDescription70: string;
-    FNewsFeedDescription250: string;
+    // Original fields for XML serialization
+    FNewsFeed_FORM: boolean;
+    FNewsFeed_VERSION: string;
+    FNewsFeed_URL: string;
+    FNewsFeed_Type: TPadNewsFeedType;
+    FNewsFeed_Language: string;
+    FNewsFeed_Purpose: string;
+    FNewsFeed_Author_Email: string;
+    FNewsFeed_Author_First_Name: string;
+    FNewsFeed_Author_Last_Name: string;
+    FNewsFeed_DESCRIPTION: string;
+    FNewsFeed_Feed_URL: string;
+    FNewsFeed_Site_Name: string;
+    FNewsFeed_Site_URL: string;
+    FNewsFeed_Title: string;
+    FNewsFeed_Keywords: string;
+    FNewsFeed_Description_70: string;
+    FNewsFeed_Description_250: string;
+
+    // TStrings field for long description
+    FNewsFeed_Description_250_Strings: TStrings;
+
+    // Property getters/setters for TStrings
+    function GetNewsFeed_Description_250_Strings: TStrings;
+    procedure SetNewsFeed_Description_250_Strings(Value: TStrings);
+
+    // Helper methods for NewsFeed_Type conversion
+    function GetNewsFeed_TypeAsString: string;
+    procedure SetNewsFeed_TypeAsString(const Value: string);
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    // Synchronization methods
+    procedure SyncStringsToStrings;
+    procedure SyncStringToStrings;
+  protected
+    property NewsFeed_Description_250: string read FNewsFeed_Description_250 write FNewsFeed_Description_250;
   published
-    property NewsFeedFeedURL: string read FNewsFeedFeedURL write FNewsFeedFeedURL;
-    property NewsFeedType: string read FNewsFeedType write FNewsFeedType;
-    property NewsFeedTitle: string read FNewsFeedTitle write FNewsFeedTitle;
-    property NewsFeedKeywords: string read FNewsFeedKeywords write FNewsFeedKeywords;
-    property NewsFeedDescription70: string read FNewsFeedDescription70 write FNewsFeedDescription70;
-    property NewsFeedDescription250: string read FNewsFeedDescription250 write FNewsFeedDescription250;
+    // Simple string properties
+    property NewsFeed_FORM: boolean read FNewsFeed_FORM write FNewsFeed_FORM;
+    property NewsFeed_VERSION: string read FNewsFeed_VERSION write FNewsFeed_VERSION;
+    property NewsFeed_URL: string read FNewsFeed_URL write FNewsFeed_URL;
+    property NewsFeed_Language: string read FNewsFeed_Language write FNewsFeed_Language;
+    property NewsFeed_Purpose: string read FNewsFeed_Purpose write FNewsFeed_Purpose;
+    property NewsFeed_Author_Email: string read FNewsFeed_Author_Email write FNewsFeed_Author_Email;
+    property NewsFeed_Author_First_Name: string read FNewsFeed_Author_First_Name write FNewsFeed_Author_First_Name;
+    property NewsFeed_Author_Last_Name: string read FNewsFeed_Author_Last_Name write FNewsFeed_Author_Last_Name;
+    property NewsFeed_DESCRIPTION: string read FNewsFeed_DESCRIPTION write FNewsFeed_DESCRIPTION;
+    property NewsFeed_Feed_URL: string read FNewsFeed_Feed_URL write FNewsFeed_Feed_URL;
+    property NewsFeed_Site_Name: string read FNewsFeed_Site_Name write FNewsFeed_Site_Name;
+    property NewsFeed_Site_URL: string read FNewsFeed_Site_URL write FNewsFeed_Site_URL;
+    property NewsFeed_Title: string read FNewsFeed_Title write FNewsFeed_Title;
+    property NewsFeed_Keywords: string read FNewsFeed_Keywords write FNewsFeed_Keywords;
+    property NewsFeed_Description_70: string read FNewsFeed_Description_70 write FNewsFeed_Description_70;
+
+    // Enum property for NewsFeed_Type with string conversion
+    property NewsFeed_Type: TPadNewsFeedType read FNewsFeed_Type write FNewsFeed_Type;
+    property NewsFeed_TypeAsString: string read GetNewsFeed_TypeAsString write SetNewsFeed_TypeAsString stored False;
+
+    // TStrings property for PropertyGrid (long description only)
+    property NewsFeed_Description_250_Strings: TStrings read GetNewsFeed_Description_250_Strings
+      write SetNewsFeed_Description_250_Strings stored False;
   end;
 
   { TPadFileInfo }
@@ -251,19 +309,48 @@ type
   { TPadEnglishDescription }
   TPadEnglishDescription = class(TPersistent)
   private
+    // Original string fields for XML serialization
     FKeywords: string;
     FCharDesc45: string;
     FCharDesc80: string;
     FCharDesc250: string;
     FCharDesc450: string;
     FCharDesc2000: string;
-  published
-    property Keywords: string read FKeywords write FKeywords;
-    property CharDesc45: string read FCharDesc45 write FCharDesc45;
-    property CharDesc80: string read FCharDesc80 write FCharDesc80;
+
+    // TStrings fields for PropertyGrid (long descriptions only)
+    FCharDesc250Strings: TStrings;
+    FCharDesc450Strings: TStrings;
+    FCharDesc2000Strings: TStrings;
+
+    // Property getters/setters for TStrings
+    function GetCharDesc250Strings: TStrings;
+    procedure SetCharDesc250Strings(Value: TStrings);
+    function GetCharDesc450Strings: TStrings;
+    procedure SetCharDesc450Strings(Value: TStrings);
+    function GetCharDesc2000Strings: TStrings;
+    procedure SetCharDesc2000Strings(Value: TStrings);
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    // Helper methods for string<->TStrings conversion
+    procedure SyncStringsToStrings; // Call after loading from XML
+    procedure SyncStringToStrings;  // Call before saving to XML
+  protected
+    // Long descriptions - string properties for XML
     property CharDesc250: string read FCharDesc250 write FCharDesc250;
     property CharDesc450: string read FCharDesc450 write FCharDesc450;
     property CharDesc2000: string read FCharDesc2000 write FCharDesc2000;
+  published
+    // Short descriptions - keep as simple string properties
+    property Keywords: string read FKeywords write FKeywords;
+    property CharDesc45: string read FCharDesc45 write FCharDesc45;
+    property CharDesc80: string read FCharDesc80 write FCharDesc80;
+
+    // TStrings properties for PropertyGrid (long descriptions only)
+    property CharDesc250Strings: TStrings read GetCharDesc250Strings write SetCharDesc250Strings stored False;
+    property CharDesc450Strings: TStrings read GetCharDesc450Strings write SetCharDesc450Strings stored False;
+    property CharDesc2000Strings: TStrings read GetCharDesc2000Strings write SetCharDesc2000Strings stored False;
   end;
 
   { TPadProgramDescriptions }
@@ -323,11 +410,35 @@ type
   { TPadPermissions }
   TPadPermissions = class(TPersistent)
   private
+    // Original string fields for XML serialization
     FDistributionPermissions: string;
     FEULA: string;
-  published
+
+    // TStrings fields for PropertyGrid
+    FDistributionPermissionsStrings: TStrings;
+    FEULAStrings: TStrings;
+
+    // Property getters/setters for TStrings
+    function GetDistributionPermissionsStrings: TStrings;
+    procedure SetDistributionPermissionsStrings(Value: TStrings);
+    function GetEULAStrings: TStrings;
+    procedure SetEULAStrings(Value: TStrings);
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    // Synchronization methods
+    procedure SyncStringsToStrings;
+    procedure SyncStringToStrings;
+  protected
+    // String properties for XML
     property DistributionPermissions: string read FDistributionPermissions write FDistributionPermissions;
     property EULA: string read FEULA write FEULA;
+  published
+    // TStrings properties for PropertyGrid
+    property DistributionPermissionsStrings: TStrings read GetDistributionPermissionsStrings
+      write SetDistributionPermissionsStrings stored False;
+    property EULAStrings: TStrings read GetEULAStrings write SetEULAStrings stored False;
   end;
 
   { TPadASP }
@@ -446,6 +557,97 @@ begin
   if FVersion <= 0 then FVersion := 4;
 end;
 
+{ TPadNewsFeed }
+
+constructor TPadNewsFeed.Create;
+begin
+  inherited Create;
+  FNewsFeed_Description_250_Strings := TStringList.Create;
+  FNewsFeed_Description_250_Strings.TrailingLineBreak := False;
+  FNewsFeed_FORM := True; // Default to Y
+  FNewsFeed_VERSION := '1.0';
+  FNewsFeed_URL := 'http://Submit-Everywhere.com/extensions/NewsFeed.htm';
+  FNewsFeed_Type := pnftRSS090; // Default value
+end;
+
+destructor TPadNewsFeed.Destroy;
+begin
+  FNewsFeed_Description_250_Strings.Free;
+  inherited Destroy;
+end;
+
+function TPadNewsFeed.GetNewsFeed_Description_250_Strings: TStrings;
+begin
+  Result := FNewsFeed_Description_250_Strings;
+end;
+
+procedure TPadNewsFeed.SetNewsFeed_Description_250_Strings(Value: TStrings);
+begin
+  if Assigned(Value) then
+    FNewsFeed_Description_250_Strings.Assign(Value)
+  else
+    FNewsFeed_Description_250_Strings.Clear;
+end;
+
+function TPadNewsFeed.GetNewsFeed_TypeAsString: string;
+begin
+  Result := PadNewsFeedTypeStrings[FNewsFeed_Type];
+end;
+
+procedure TPadNewsFeed.SetNewsFeed_TypeAsString(const Value: string);
+var
+  i: TPadNewsFeedType;
+begin
+  // Search for matching string in the array
+  for i := Low(TPadNewsFeedType) to High(TPadNewsFeedType) do
+  begin
+    if SameText(PadNewsFeedTypeStrings[i], Value) then
+    begin
+      FNewsFeed_Type := i;
+      Exit;
+    end;
+  end;
+
+  // If not found, default to pnftRSS090
+  FNewsFeed_Type := pnftRSS090;
+end;
+
+procedure TPadNewsFeed.SyncStringsToStrings;
+begin
+  FNewsFeed_Description_250_Strings.Text := FNewsFeed_Description_250;
+end;
+
+procedure TPadNewsFeed.SyncStringToStrings;
+begin
+  FNewsFeed_Description_250 := FNewsFeed_Description_250_Strings.Text;
+end;
+
+// Helper function for NewsFeed type conversion
+function PadNewsFeedTypeToString(Value: TPadNewsFeedType): string;
+begin
+  if (Value >= Low(TPadNewsFeedType)) and (Value <= High(TPadNewsFeedType)) then
+    Result := PadNewsFeedTypeStrings[Value]
+  else
+    Result := '';
+end;
+
+function StringToPadNewsFeedType(const Value: string): TPadNewsFeedType;
+var
+  NewsFeedType: TPadNewsFeedType;
+begin
+  for NewsFeedType := Low(TPadNewsFeedType) to High(TPadNewsFeedType) do
+  begin
+    if SameText(PadNewsFeedTypeStrings[NewsFeedType], Value) then
+    begin
+      Result := NewsFeedType;
+      Exit;
+    end;
+  end;
+
+  // If not found, return default
+  Result := pnftRSS090;
+end;
+
 { TPadExpireInfo }
 
 function TPadExpireInfo.GetExpireBasedOnAsString: string;
@@ -560,6 +762,84 @@ begin
   inherited Destroy;
 end;
 
+{ TPadEnglishDescription }
+
+constructor TPadEnglishDescription.Create;
+begin
+  inherited Create;
+  // Initialize TStrings objects for long descriptions only
+  FCharDesc250Strings := TStringList.Create;
+  FCharDesc250Strings.TrailingLineBreak := False;
+  FCharDesc450Strings := TStringList.Create;
+  FCharDesc450Strings.TrailingLineBreak := False;
+  FCharDesc2000Strings := TStringList.Create;
+  FCharDesc2000Strings.TrailingLineBreak := False;
+end;
+
+destructor TPadEnglishDescription.Destroy;
+begin
+  FCharDesc250Strings.Free;
+  FCharDesc450Strings.Free;
+  FCharDesc2000Strings.Free;
+  inherited Destroy;
+end;
+
+function TPadEnglishDescription.GetCharDesc250Strings: TStrings;
+begin
+  // Always return the TStrings object
+  Result := FCharDesc250Strings;
+end;
+
+procedure TPadEnglishDescription.SetCharDesc250Strings(Value: TStrings);
+begin
+  if Assigned(Value) then
+    FCharDesc250Strings.Assign(Value)
+  else
+    FCharDesc250Strings.Clear;
+end;
+
+function TPadEnglishDescription.GetCharDesc450Strings: TStrings;
+begin
+  Result := FCharDesc450Strings;
+end;
+
+procedure TPadEnglishDescription.SetCharDesc450Strings(Value: TStrings);
+begin
+  if Assigned(Value) then
+    FCharDesc450Strings.Assign(Value)
+  else
+    FCharDesc450Strings.Clear;
+end;
+
+function TPadEnglishDescription.GetCharDesc2000Strings: TStrings;
+begin
+  Result := FCharDesc2000Strings;
+end;
+
+procedure TPadEnglishDescription.SetCharDesc2000Strings(Value: TStrings);
+begin
+  if Assigned(Value) then
+    FCharDesc2000Strings.Assign(Value)
+  else
+    FCharDesc2000Strings.Clear;
+end;
+
+// Call this after loading from XML to populate TStrings from string fields
+procedure TPadEnglishDescription.SyncStringsToStrings;
+begin
+  FCharDesc250Strings.Text := FCharDesc250;
+  FCharDesc450Strings.Text := FCharDesc450;
+  FCharDesc2000Strings.Text := FCharDesc2000;
+end;
+
+// Call this before saving to XML to update string fields from TStrings
+procedure TPadEnglishDescription.SyncStringToStrings;
+begin
+  FCharDesc250 := FCharDesc250Strings.Text;
+  FCharDesc450 := FCharDesc450Strings.Text;
+  FCharDesc2000 := FCharDesc2000Strings.Text;
+end;
+
 { TPadProgramDescriptions }
 
 constructor TPadProgramDescriptions.Create;
@@ -590,6 +870,62 @@ begin
   inherited Destroy;
 end;
 
+{ TPadPermissions }
+
+constructor TPadPermissions.Create;
+begin
+  inherited Create;
+  FDistributionPermissionsStrings := TStringList.Create;
+  FDistributionPermissionsStrings.TrailingLineBreak := False;
+  FEULAStrings := TStringList.Create;
+  FEULAStrings.TrailingLineBreak := False;
+end;
+
+destructor TPadPermissions.Destroy;
+begin
+  FDistributionPermissionsStrings.Free;
+  FEULAStrings.Free;
+  inherited Destroy;
+end;
+
+function TPadPermissions.GetDistributionPermissionsStrings: TStrings;
+begin
+  Result := FDistributionPermissionsStrings;
+end;
+
+procedure TPadPermissions.SetDistributionPermissionsStrings(Value: TStrings);
+begin
+  if Assigned(Value) then
+    FDistributionPermissionsStrings.Assign(Value)
+  else
+    FDistributionPermissionsStrings.Clear;
+end;
+
+function TPadPermissions.GetEULAStrings: TStrings;
+begin
+  Result := FEULAStrings;
+end;
+
+procedure TPadPermissions.SetEULAStrings(Value: TStrings);
+begin
+  if Assigned(Value) then
+    FEULAStrings.Assign(Value)
+  else
+    FEULAStrings.Clear;
+end;
+
+procedure TPadPermissions.SyncStringsToStrings;
+begin
+  FDistributionPermissionsStrings.Text := FDistributionPermissions;
+  FEULAStrings.Text := FEULA;
+end;
+
+procedure TPadPermissions.SyncStringToStrings;
+begin
+  FDistributionPermissions := FDistributionPermissionsStrings.Text;
+  FEULA := FEULAStrings.Text;
+end;
+
 { TPadFormat }
 
 constructor TPadFormat.Create(AOwner: TComponent);
@@ -617,8 +953,6 @@ begin
   FASP.Free;
   inherited Destroy;
 end;
-
-{ TPadFormat }
 
 procedure TPadFormat.LoadFromXML(const XMLContent: string);
 var
@@ -655,6 +989,8 @@ begin
           GetNodeValue(Node, 'MASTER_PAD_VERSION');
         FMasterPadVersionInfo.MasterPadEditor :=
           GetNodeValue(Node, 'MASTER_PAD_EDITOR');
+        FMasterPadVersionInfo.MasterPadEditorUrl :=
+          GetNodeValue(Node, 'MASTER_PAD_EDITOR_URL');
         FMasterPadVersionInfo.MasterPadInfo :=
           GetNodeValue(Node, 'MASTER_PAD_INFO');
       end;
@@ -705,16 +1041,27 @@ begin
         FCompanyInfo.CompanyStorePage := GetNodeValue(Node, 'CompanyStorePage');
       end;
 
-      // News Feed
+      // Load News Feed (updated with new fields)
       Node := RootNode.FindNode('NewsFeed');
       if Assigned(Node) then
       begin
-        FNewsFeed.NewsFeedFeedURL := GetNodeValue(Node, 'NewsFeed_Feed_URL');
-        FNewsFeed.NewsFeedType := GetNodeValue(Node, 'NewsFeed_Type');
-        FNewsFeed.NewsFeedTitle := GetNodeValue(Node, 'NewsFeed_Title');
-        FNewsFeed.NewsFeedKeywords := GetNodeValue(Node, 'NewsFeed_Keywords');
-        FNewsFeed.NewsFeedDescription70 := GetNodeValue(Node, 'NewsFeed_Description_70');
-        FNewsFeed.NewsFeedDescription250 := GetNodeValue(Node, 'NewsFeed_Description_250');
+        FNewsFeed.NewsFeed_FORM := UpperCase(GetNodeValue(Node, 'NewsFeed_FORM')) = 'Y';
+        FNewsFeed.NewsFeed_VERSION := GetNodeValue(Node, 'NewsFeed_VERSION');
+        FNewsFeed.NewsFeed_URL := GetNodeValue(Node, 'NewsFeed_URL');
+        FNewsFeed.NewsFeed_TypeAsString := GetNodeValue(Node, 'NewsFeed_Type');
+        FNewsFeed.NewsFeed_Language := GetNodeValue(Node, 'NewsFeed_Language');
+        FNewsFeed.NewsFeed_Purpose := GetNodeValue(Node, 'NewsFeed_Purpose');
+        FNewsFeed.NewsFeed_Author_Email := GetNodeValue(Node, 'NewsFeed_Author_Email');
+        FNewsFeed.NewsFeed_Author_First_Name := GetNodeValue(Node, 'NewsFeed_Author_First_Name');
+        FNewsFeed.NewsFeed_Author_Last_Name := GetNodeValue(Node, 'NewsFeed_Author_Last_Name');
+        FNewsFeed.NewsFeed_DESCRIPTION := GetNodeValue(Node, 'NewsFeed_DESCRIPTION');
+        FNewsFeed.NewsFeed_Feed_URL := GetNodeValue(Node, 'NewsFeed_Feed_URL');
+        FNewsFeed.NewsFeed_Site_Name := GetNodeValue(Node, 'NewsFeed_Site_Name');
+        FNewsFeed.NewsFeed_Site_URL := GetNodeValue(Node, 'NewsFeed_Site_URL');
+        FNewsFeed.NewsFeed_Title := GetNodeValue(Node, 'NewsFeed_Title');
+        FNewsFeed.NewsFeed_Keywords := GetNodeValue(Node, 'NewsFeed_Keywords');
+        FNewsFeed.NewsFeed_Description_70 := GetNodeValue(Node, 'NewsFeed_Description_70');
+        FNewsFeed.NewsFeed_Description_250 := GetNodeValue(Node, 'NewsFeed_Description_250');
       end;
 
       // Load Program Info
@@ -828,6 +1175,9 @@ begin
         FASP.ASPMemberNumber := StrToIntDef(GetNodeValue(Node, 'ASP_Member_Number'), 0);
       end;
 
+      FProgramDescriptions.English.SyncStringsToStrings;
+      FNewsFeed.SyncStringsToStrings;
+      FPermissions.SyncStringsToStrings;
     finally
       Doc.Free;
     end;
@@ -845,6 +1195,10 @@ var
 begin
   Doc := TXMLDocument.Create;
   try
+    FProgramDescriptions.English.SyncStringToStrings;
+    FNewsFeed.SyncStringToStrings;
+    FPermissions.SyncStringToStrings;
+
     // Create root element
     RootNode := Doc.CreateElement('XML_DIZ_INFO');
     Doc.AppendChild(RootNode);
@@ -855,6 +1209,8 @@ begin
       FMasterPadVersionInfo.MasterPadVersion);
     SetNodeText(Doc, Node, 'MASTER_PAD_EDITOR',
       FMasterPadVersionInfo.MasterPadEditor);
+    SetNodeText(Doc, Node, 'MASTER_PAD_EDITOR_URL',
+      FMasterPadVersionInfo.MasterPadEditorUrl);
     SetNodeText(Doc, Node, 'MASTER_PAD_INFO',
       FMasterPadVersionInfo.MasterPadInfo);
 
@@ -910,14 +1266,28 @@ begin
       SetNodeText(Doc, Node, 'FacebookCompanyPage', FCompanyInfo.FacebookCompanyPage);
       SetNodeText(Doc, Node, 'CompanyStorePage', FCompanyInfo.CompanyStorePage);
 
-      // News Feed
-      Node := AddChildNode(RootNode, 'NewsFeed');
-      SetNodeText(Doc, Node, 'NewsFeed_Feed_URL', FNewsFeed.NewsFeedFeedURL);
-      SetNodeText(Doc, Node, 'NewsFeed_Type', FNewsFeed.NewsFeedType);
-      SetNodeText(Doc, Node, 'NewsFeed_Title', FNewsFeed.NewsFeedTitle);
-      SetNodeText(Doc, Node, 'NewsFeed_Keywords', FNewsFeed.NewsFeedKeywords);
-      SetNodeText(Doc, Node, 'NewsFeed_Description_70', FNewsFeed.NewsFeedDescription70);
-      SetNodeText(Doc, Node, 'NewsFeed_Description_250', FNewsFeed.NewsFeedDescription250);
+      // Save News Feed (updated with new fields)
+      if (MasterPadVersionInfo.Version >= 4) then
+      begin
+        Node := AddChildNode(RootNode, 'NewsFeed');
+        SetNodeText(Doc, Node, 'NewsFeed_FORM', BoolToStr(FNewsFeed.NewsFeed_FORM, 'Y', 'N'));
+        SetNodeText(Doc, Node, 'NewsFeed_VERSION', FNewsFeed.NewsFeed_VERSION);
+        SetNodeText(Doc, Node, 'NewsFeed_URL', FNewsFeed.NewsFeed_URL);
+        SetNodeText(Doc, Node, 'NewsFeed_Type', FNewsFeed.NewsFeed_TypeAsString);
+        SetNodeText(Doc, Node, 'NewsFeed_Language', FNewsFeed.NewsFeed_Language);
+        SetNodeText(Doc, Node, 'NewsFeed_Purpose', FNewsFeed.NewsFeed_Purpose);
+        SetNodeText(Doc, Node, 'NewsFeed_Author_Email', FNewsFeed.NewsFeed_Author_Email);
+        SetNodeText(Doc, Node, 'NewsFeed_Author_First_Name', FNewsFeed.NewsFeed_Author_First_Name);
+        SetNodeText(Doc, Node, 'NewsFeed_Author_Last_Name', FNewsFeed.NewsFeed_Author_Last_Name);
+        SetNodeText(Doc, Node, 'NewsFeed_DESCRIPTION', FNewsFeed.NewsFeed_DESCRIPTION);
+        SetNodeText(Doc, Node, 'NewsFeed_Feed_URL', FNewsFeed.NewsFeed_Feed_URL);
+        SetNodeText(Doc, Node, 'NewsFeed_Site_Name', FNewsFeed.NewsFeed_Site_Name);
+        SetNodeText(Doc, Node, 'NewsFeed_Site_URL', FNewsFeed.NewsFeed_Site_URL);
+        SetNodeText(Doc, Node, 'NewsFeed_Title', FNewsFeed.NewsFeed_Title);
+        SetNodeText(Doc, Node, 'NewsFeed_Keywords', FNewsFeed.NewsFeed_Keywords);
+        SetNodeText(Doc, Node, 'NewsFeed_Description_70', FNewsFeed.NewsFeed_Description_70);
+        SetNodeText(Doc, Node, 'NewsFeed_Description_250', FNewsFeed.NewsFeed_Description_250);
+      end;
     end;
 
     // Program Info
@@ -1054,6 +1424,7 @@ begin
   // Clear all properties to default values
   FMasterPadVersionInfo.MasterPadVersion := '4.0';
   FMasterPadVersionInfo.MasterPadEditor := '';
+  FMasterPadVersionInfo.MasterPadEditorUrl := '';
   FMasterPadVersionInfo.MasterPadInfo :=
     'Portable Application Description, or PAD for short, is a data set that is used by shareware authors to disseminate information to anyone interested in their software products. To find out more go to http://www.asp-shareware.org/pad';
 
@@ -1092,12 +1463,24 @@ begin
   FCompanyInfo.CompanyStorePage := '';
 
   // Clear News Feed
-  FNewsFeed.NewsFeedFeedURL := '';
-  FNewsFeed.NewsFeedType := '';
-  FNewsFeed.NewsFeedTitle := '';
-  FNewsFeed.NewsFeedKeywords := '';
-  FNewsFeed.NewsFeedDescription70 := '';
-  FNewsFeed.NewsFeedDescription250 := '';
+  FNewsFeed.NewsFeed_FORM := True;
+  FNewsFeed.NewsFeed_VERSION := '1.0';
+  FNewsFeed.NewsFeed_URL := 'http://Submit-Everywhere.com/extensions/NewsFeed.htm';
+  FNewsFeed.NewsFeed_Type := pnftRSS090;
+  FNewsFeed.NewsFeed_Language := '';
+  FNewsFeed.NewsFeed_Purpose := '';
+  FNewsFeed.NewsFeed_Author_Email := '';
+  FNewsFeed.NewsFeed_Author_First_Name := '';
+  FNewsFeed.NewsFeed_Author_Last_Name := '';
+  FNewsFeed.NewsFeed_DESCRIPTION :=
+    'This PAD extension allows you to add your RSS and Atom news feeds info into your PAD file. This info can be used by RSS feed submission software or by feed directories themselves.';
+  FNewsFeed.NewsFeed_Feed_URL := '';
+  FNewsFeed.NewsFeed_Site_Name := '';
+  FNewsFeed.NewsFeed_Site_URL := '';
+  FNewsFeed.NewsFeed_Title := '';
+  FNewsFeed.NewsFeed_Keywords := '';
+  FNewsFeed.NewsFeed_Description_70 := '';
+  FNewsFeed.NewsFeed_Description_250 := '';
 
   // Clear Program Info
   FProgramInfo.ProgramName := '';
@@ -1150,6 +1533,11 @@ begin
   FProgramDescriptions.English.CharDesc450 := '';
   FProgramDescriptions.English.CharDesc2000 := '';
 
+  // Clear TStrings objects
+  FProgramDescriptions.English.CharDesc250Strings.Clear;
+  FProgramDescriptions.English.CharDesc450Strings.Clear;
+  FProgramDescriptions.English.CharDesc2000Strings.Clear;
+
   // Clear Web Info
   FWebInfo.ApplicationURLs.ApplicationInfoURL := '';
   FWebInfo.ApplicationURLs.ApplicationOrderURL := '';
@@ -1165,6 +1553,8 @@ begin
   // Clear Permissions
   FPermissions.DistributionPermissions := '';
   FPermissions.EULA := '';
+  FPermissions.DistributionPermissionsStrings.Clear;
+  FPermissions.EULAStrings.Clear;
 
   // Clear ASP
   FASP.ASPForm := False;

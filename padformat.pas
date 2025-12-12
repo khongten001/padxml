@@ -1993,7 +1993,7 @@ begin
   FCompanyInfo.CompanyStorePage := '';
 
   // Clear News Feed
-  FNewsFeed.NewsFeed_FORM := True;
+  FNewsFeed.NewsFeed_FORM := False;
   FNewsFeed.NewsFeed_VERSION := '1.0';
   FNewsFeed.NewsFeed_URL := 'http://Submit-Everywhere.com/extensions/NewsFeed.htm';
   FNewsFeed.NewsFeed_Type := pnftRSS090;
@@ -2087,8 +2087,8 @@ begin
   FPermissions.EULAStrings.Clear;
 
   // Clear Affiliates
-  FAffiliates.Affiliates_FORM := True;
-  FAffiliates.Affiliates_VERSION := '1.2'; // Default, will be updated on save based on master version
+  FAffiliates.Affiliates_FORM := False;
+  FAffiliates.Affiliates_VERSION := '1.4'; // Default, will be updated on save based on master version
   FAffiliates.Affiliates_URL := 'http://www.asp-shareware.org/pad/extensions/Affiliates.htm';
   FAffiliates.Affiliates_Information_Page := '';
 
@@ -2219,7 +2219,7 @@ begin
   FAffiliates.Yaskifo.MaximumCommissionRate := '';
 
   // Clear ASP
-  FASP.ASPForm := False;
+  FASP.ASPForm := True;
   FASP.ASPMember := False;
   FASP.ASPMemberNumber := 0;
 end;

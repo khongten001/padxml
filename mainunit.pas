@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Menus, padformat,
-  RTTIGrids, PropEdits, ObjectInspector;
+  RTTIGrids, PropEdits, ObjectInspector, FileUtil;
 
 type
 
@@ -26,6 +26,10 @@ type
     Separator1: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: boolean);
+    procedure FormDropFiles(Sender: TObject; const FileNames: array of string);
+    procedure FormShow(Sender: TObject);
+    procedure menuFileExitClick(Sender: TObject);
     procedure menuFileNewClick(Sender: TObject);
     procedure menuFileOpenClick(Sender: TObject);
     procedure menuFileSaveAsClick(Sender: TObject);
@@ -36,9 +40,19 @@ type
     PadFormat: TPadFormat;
     FFileName: string;
     FChanged: boolean;
+    FInitialized: boolean;
+    FCommandLineFile: string;
     function SaveFile(AFileName: string): boolean;
+    function LoadFromFile(AFileName: string): boolean;
     function IsCanClose: boolean;
-    procedure SetInfo;
+    function PromptSaveChanges: TModalResult;
+    procedure ClearEditor;
+    procedure UpdateCaption;
+    procedure OpenFile(const AFileName: string);
+    procedure OpenFileFromCommandLine;
+    procedure SetFileFilterForDialog;
+    procedure HandleCommandLineParameters;
+    function ValidateFileForOpen(const AFileName: string): boolean;
   public
   end;
 
@@ -52,102 +66,492 @@ implementation
 { TformPadXml }
 
 procedure TformPadXml.FormCreate(Sender: TObject);
-//var
-//  XMLContent: string;
 begin
-  PadFormat := TPadFormat.Create(Self);
-  //with TStringList.Create do
-  //try
-  //  LoadFromFile('E:\pads\DbSchema4.0.xml');
-  //  XMLContent := Text;
-  //  PadFormat.LoadFromXML(XMLContent);
-  //finally
-  //  Free;
-  //end;
+  // Enable file dropping
+  AllowDropFiles := True;
 
+  // Initialize state
+  FInitialized := False;
+  FChanged := False;
+  FFileName := '';
+  FCommandLineFile := '';
+
+  // Create PadFormat object
+  PadFormat := TPadFormat.Create(Self);
+  ClearEditor;
+  UpdateCaption;
+
+  // Set up property grid
   peditPad.TIObject := PadFormat;
+
+  // Set up file filters
+  SetFileFilterForDialog;
+
+  // Handle command line parameters
+  HandleCommandLineParameters;
 end;
 
 procedure TformPadXml.FormDestroy(Sender: TObject);
 begin
-  //with TStringList.Create do
-  //try
-  //  Text := PadFormat.SaveToXML;
-  //  SaveToFile('E:\pads\_DbSchema4.0.xml');
-  //finally
-  //  Free;
-  //end;
-
   PadFormat.Free;
+end;
+
+procedure TformPadXml.FormCloseQuery(Sender: TObject; var CanClose: boolean);
+begin
+  CanClose := IsCanClose;
+end;
+
+procedure TformPadXml.FormDropFiles(Sender: TObject; const FileNames: array of string);
+begin
+  if Length(FileNames) = 0 then
+    Exit;
+
+  // Get the first dropped file
+  OpenFile(FileNames[0]);
+end;
+
+procedure TformPadXml.FormShow(Sender: TObject);
+begin
+  if not FInitialized then
+  begin
+    FInitialized := True;
+
+    // Open file from command line if specified
+    OpenFileFromCommandLine;
+  end;
+end;
+
+procedure TformPadXml.menuFileExitClick(Sender: TObject);
+begin
+  Close;
 end;
 
 procedure TformPadXml.menuFileNewClick(Sender: TObject);
 begin
-  PadFormat.Clear;
-  FFileName := string.Empty;
+  if not IsCanClose then Exit;
+
+  ClearEditor;
+  FFileName := '';
+  FChanged := False;
+  UpdateCaption;
 end;
 
 procedure TformPadXml.menuFileOpenClick(Sender: TObject);
 begin
+  if not IsCanClose then Exit;
+
   if dialogOpen.Execute then
   begin
+    OpenFile(dialogOpen.FileName);
   end;
 end;
 
 procedure TformPadXml.menuFileSaveAsClick(Sender: TObject);
+var
+  TempFileName: string;
 begin
+  // Set initial filename in dialog
+  if FFileName <> '' then
+    dialogSave.FileName := ExtractFileName(FFileName)
+  else
+    dialogSave.FileName := 'untitled.xml';
+
   if dialogSave.Execute then
   begin
+    TempFileName := dialogSave.FileName;
+
+    // Ensure file has extension
+    if ExtractFileExt(TempFileName) = '' then
+      TempFileName := TempFileName + '.xml';
+
+    if SaveFile(TempFileName) then
+    begin
+      FFileName := TempFileName;
+      FChanged := False;
+      UpdateCaption;
+    end;
   end;
 end;
 
 procedure TformPadXml.menuFileSaveClick(Sender: TObject);
 begin
-  SaveFile(FFileName);
+  if FFileName = '' then
+  begin
+    // No filename yet, use Save As dialog
+    menuFileSaveAsClick(Sender);
+  end
+  else
+  begin
+    // Save to current file
+    if SaveFile(FFileName) then
+    begin
+      FChanged := False;
+      UpdateCaption;
+    end;
+  end;
 end;
 
 function TformPadXml.SaveFile(AFileName: string): boolean;
+var
+  sl: TStringList;
 begin
-  Result := True;
+  Result := False;
+
+  // Validate filename
+  if Trim(AFileName) = '' then
+  begin
+    MessageDlg('Error', 'Invalid file name', mtError, [mbOK], 0);
+    Exit;
+  end;
+
+  sl := TStringList.Create;
+  try
+    try
+      // Get XML content
+      sl.Text := PadFormat.SaveToXML;
+
+      // Ensure directory exists
+      ForceDirectories(ExtractFilePath(AFileName));
+
+      // Save file with UTF-8 encoding
+      sl.SaveToFile(AFileName, TEncoding.UTF8);
+
+      Result := True;
+    except
+      on E: Exception do
+      begin
+        MessageDlg('Save Error',
+          'Error saving file:' + sLineBreak + E.Message,
+          mtError, [mbOK], 0);
+        Result := False;
+      end;
+    end;
+  finally
+    sl.Free;
+  end;
+end;
+
+function TformPadXml.LoadFromFile(AFileName: string): boolean;
+var
+  sl: TStringList;
+begin
+  Result := False;
+
+  if not FileExists(AFileName) then
+  begin
+    MessageDlg('Error', 'File does not exist: ' + AFileName, mtError, [mbOK], 0);
+    Exit;
+  end;
+
+  // Check if file is readable
+  try
+    if FileSize(AFileName) > 50 * 1024 * 1024 then // 50 MB limit
+    begin
+      if MessageDlg('Large File', 'The file is very large (' + IntToStr(FileSize(AFileName) div 1024 div 1024) +
+        ' MB).' + sLineBreak + 'Opening it may take a while. Continue?', mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+        Exit;
+    end;
+  except
+    // Ignore file size check errors
+  end;
+
+  sl := TStringList.Create;
+  try
+    try
+      // Load file with UTF-8 encoding (try UTF-8 first, fallback to ANSI)
+      try
+        sl.LoadFromFile(AFileName, TEncoding.UTF8);
+      except
+        // If UTF-8 fails, try ANSI
+        sl.LoadFromFile(AFileName);
+      end;
+
+      // Load into PadFormat
+      PadFormat.LoadFromXML(sl.Text);
+
+      // Refresh property grid
+      peditPad.TIObject := nil;
+      peditPad.TIObject := PadFormat;
+
+      Result := True;
+
+    except
+      on E: Exception do
+      begin
+        MessageDlg('Load Error',
+          'Error loading file:' + sLineBreak + E.Message + sLineBreak + 'File may be corrupted or in wrong format.',
+          mtError, [mbOK], 0);
+        Result := False;
+      end;
+    end;
+  finally
+    sl.Free;
+  end;
 end;
 
 function TformPadXml.IsCanClose: boolean;
 var
-  UserResponse: integer;
+  mr: TModalResult;
 begin
+  Result := True;
+
   if FChanged then
   begin
-    // Show message with Yes, No, and Cancel options
-    UserResponse := MessageDlg('Save changes?', mtConfirmation, [mbYes, mbNo, mbCancel], 0);
+    mr := PromptSaveChanges;
 
-    case UserResponse of
+    case mr of
       mrYes:
       begin
-        // Call save method and allow form to close
-        Result := SaveFile(FFileName);
+        // Try to save
+        if FFileName = '' then
+        begin
+          // No filename, show Save As dialog
+          dialogSave.FileName := '';
+          if dialogSave.Execute then
+          begin
+            if not SaveFile(dialogSave.FileName) then
+              Result := False  // Save was cancelled or failed
+            else
+            begin
+              FFileName := dialogSave.FileName;
+              FChanged := False;
+            end;
+          end
+          else
+            Result := False;  // User cancelled Save As dialog
+        end
+        else
+        begin
+          // Save to current file
+          if not SaveFile(FFileName) then
+            Result := False  // Save failed
+          else
+            FChanged := False;
+        end;
       end;
       mrNo:
       begin
-        // Do not save, but allow form to close
+        // Don't save, just close
         Result := True;
       end;
-      else
+      mrCancel:
+      begin
+        // Cancel closing
         Result := False;
+      end;
+    end;
+  end;
+end;
+
+function TformPadXml.PromptSaveChanges: TModalResult;
+var
+  FileNameDisplay: string;
+begin
+  if FFileName = '' then
+    FileNameDisplay := 'Untitled'
+  else
+    FileNameDisplay := ExtractFileName(FFileName);
+
+  Result := MessageDlg('Save Changes', 'The document "' + FileNameDisplay + '" has been modified.' +
+    sLineBreak + 'Do you want to save your changes?', mtConfirmation, [mbYes, mbNo, mbCancel], 0);
+end;
+
+procedure TformPadXml.ClearEditor;
+begin
+  // Clear the PadFormat object
+  PadFormat.Clear;
+  PadFormat.MasterPadVersionInfo.MasterPadEditor := 'PadXml 1.0';
+
+  // Refresh property grid
+  peditPad.TIObject := nil;
+  peditPad.TIObject := PadFormat;
+end;
+
+procedure TformPadXml.OpenFile(const AFileName: string);
+begin
+  // Validate file before opening
+  if not ValidateFileForOpen(AFileName) then
+    Exit;
+
+  // Check if we need to save current changes
+  if not IsCanClose then
+    Exit;
+
+  // Try to load the file
+  if LoadFromFile(AFileName) then
+  begin
+    FFileName := AFileName;
+    FChanged := False;
+    UpdateCaption;
+  end;
+end;
+
+procedure TformPadXml.OpenFileFromCommandLine;
+begin
+  if FCommandLineFile <> '' then
+  begin
+    // Open file from command line
+    if ValidateFileForOpen(FCommandLineFile) then
+    begin
+      if LoadFromFile(FCommandLineFile) then
+      begin
+        FFileName := FCommandLineFile;
+        FChanged := False;
+        UpdateCaption;
+      end;
+    end
+    else
+    begin
+      // File validation failed, create new empty document
+      ClearEditor;
+      FFileName := '';
+      FChanged := False;
+      UpdateCaption;
     end;
   end
   else
-    Result := True; // No changes, just close the form
+  begin
+    // No file specified, create new empty document
+    ClearEditor;
+    FFileName := '';
+    FChanged := False;
+    UpdateCaption;
+  end;
 end;
 
-procedure TformPadXml.SetInfo;
+procedure TformPadXml.SetFileFilterForDialog;
 begin
-  Caption := FFileName; // TODO if changed *
+  // Set up file filters for open/save dialogs
+  dialogOpen.Filter :=
+    'Pad Xml Files (*.xml, *.pad)|*.xml|*.pad|';
+
+  dialogSave.Filter :=
+    'Pad Xml Files (*.xml)|*.xml|' + 'Pad Files (*.pad)|*.pad|';
+
+  // Set default filter
+  dialogOpen.FilterIndex := 1;
+  dialogSave.FilterIndex := 1;
+end;
+
+procedure TformPadXml.HandleCommandLineParameters;
+var
+  i: integer;
+  Param: string;
+  ValidExtensions: array of string;
+  FileExt: string;
+  j: integer;
+begin
+  ValidExtensions := ['.xml', '.txt', '.pad', '.config', '.cfg', '.ini'];
+
+  // Skip the first parameter (executable path)
+  for i := 1 to ParamCount do
+  begin
+    Param := ParamStr(i);
+
+    // Skip empty parameters and command-line switches
+    if (Param = '') or (Param[1] in ['-', '/']) then
+      Continue;
+
+    // Check if parameter is a file
+    if FileExists(Param) then
+    begin
+      // Check file extension
+      FileExt := LowerCase(ExtractFileExt(Param));
+      for j := 0 to High(ValidExtensions) do
+      begin
+        if FileExt = ValidExtensions[j] then
+        begin
+          FCommandLineFile := Param;
+          Break;
+        end;
+      end;
+
+      if FCommandLineFile <> '' then
+        Break;
+    end
+    else
+    begin
+      // Parameter might be a file path with spaces (passed without quotes)
+      // Try to see if it's a partial path
+      if Pos(' ', Param) > 0 then
+      begin
+        // This might be part of a path with spaces, we could try to reconstruct
+        // For simplicity, we'll just store the first parameter that looks like a file
+        FCommandLineFile := Param;
+        // Note: In real application, you might want to handle quoted paths properly
+      end;
+    end;
+  end;
+end;
+
+function TformPadXml.ValidateFileForOpen(const AFileName: string): boolean;
+var
+  ValidExtensions: array of string;
+  FileExt: string;
+  i: integer;
+begin
+  Result := False;
+
+  // Check if file exists
+  if not FileExists(AFileName) then
+  begin
+    MessageDlg('Error', 'File does not exist:' + sLineBreak + AFileName,
+      mtError, [mbOK], 0);
+    Exit;
+  end;
+
+  // Check if file is valid (optional - you can remove this if you want to accept any file)
+  ValidExtensions := ['.xml', '.txt', '.pad', '.config', '.cfg', '.ini'];
+  FileExt := LowerCase(ExtractFileExt(AFileName));
+
+  for i := 0 to High(ValidExtensions) do
+  begin
+    if FileExt = ValidExtensions[i] then
+    begin
+      Result := True;
+      Exit;
+    end;
+  end;
+
+  // If file extension is not in our list, ask for confirmation
+  if MessageDlg('Open File', 'The file "' + ExtractFileName(AFileName) + '" has an unrecognized extension.' +
+    sLineBreak + 'Do you want to try opening it anyway?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+  begin
+    Result := True;
+  end;
+end;
+
+procedure TformPadXml.UpdateCaption;
+var
+  BaseTitle: string;
+  AppName: string;
+begin
+  // Get application name from project settings or use default
+  AppName := 'PadXml Editor';
+
+  if FFileName = '' then
+    BaseTitle := 'Untitled'
+  else
+    BaseTitle := ExtractFileName(FFileName);
+
+  if FChanged then
+    Caption := BaseTitle + '* - ' + AppName
+  else
+    Caption := BaseTitle + ' - ' + AppName;
+
+  // You can also set the application title for taskbar
+  Application.Title := BaseTitle;
+  if FChanged then
+    Application.Title := Application.Title + '*';
 end;
 
 procedure TformPadXml.peditPadModified(Sender: TObject);
 begin
-  FChanged := True;
-  SetInfo;
+  if not FChanged then
+  begin
+    FChanged := True;
+    UpdateCaption;
+  end;
 end;
 
 procedure TformPadXml.peditPadEditorFilter(Sender: TObject; aEditor: TPropertyEditor; var aShow: boolean);

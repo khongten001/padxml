@@ -10,6 +10,7 @@ object formPadXml: TformPadXml
   LCLVersion = '4.4.0.0'
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnDropFiles = FormDropFiles
   object peditPad: TTIPropertyGrid
     Left = 0
     Height = 457
@@ -58,7 +59,7 @@ object formPadXml: TformPadXml
     end
   end
   object dialogOpen: TOpenDialog
-    Options = [ofFileMustExist, ofEnableSizing, ofViewDetail]
+    Options = [ofOverwritePrompt, ofFileMustExist, ofEnableSizing, ofViewDetail]
     Left = 142
     Top = 40
   end

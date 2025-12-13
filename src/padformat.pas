@@ -1581,7 +1581,9 @@ begin
         FASP.ASPForm := UpperCase(GetNodeValue(Node, 'ASP_FORM')) = 'Y';
         FASP.ASPMember := UpperCase(GetNodeValue(Node, 'ASP_Member')) = 'Y';
         FASP.ASPMemberNumber := StrToIntDef(GetNodeValue(Node, 'ASP_Member_Number'), 0);
-      end;
+      end
+      else
+        FASP.ASPForm := False;
 
       FProgramDescriptions.English.SyncStringsToStrings;
       FNewsFeed.SyncStringsToStrings;

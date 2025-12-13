@@ -28,7 +28,7 @@ type
   TPadSupportInfo = class;
   TPadFileInfo = class;
   TPadExpireInfo = class;
-  TPadEnglishDescription = class;
+  TPadLanguageDescription = class;
   TPadApplicationURLs = class;
   TPadDownloadURLs = class;
 
@@ -270,6 +270,8 @@ type
     FProgramChangeInfo: string;
     FProgramSpecificCategory: string;
     FProgramCategoryClass: TPadProgramCategoryClass;
+    FProgramCategories: string;
+    FProgramCategoriesExists: boolean;
     FProgramSystemRequirements: string;
 
     FIncludesJavaVm: boolean;
@@ -333,6 +335,7 @@ type
     property ProgramChangeInfo: string read FProgramChangeInfo write FProgramChangeInfo;
     property ProgramSpecificCategory: string read FProgramSpecificCategory write FProgramSpecificCategory;
     property ProgramCategoryClass: TPadProgramCategoryClass read FProgramCategoryClass write FProgramCategoryClass;
+    property ProgramCategories: string read FProgramCategories write FProgramCategories;
     property ProgramSystemRequirements: string read FProgramSystemRequirements write FProgramSystemRequirements;
     property IncludesJavaVm: boolean read FIncludesJavaVm write FIncludesJavaVm default False;
     property IncludesVbRuntime: boolean read FIncludesVbRuntime write FIncludesVbRuntime default False;
@@ -341,8 +344,8 @@ type
     property ExpireInfo: TPadExpireInfo read FExpireInfo write FExpireInfo;
   end;
 
-  { TPadEnglishDescription }
-  TPadEnglishDescription = class(TPersistent)
+  { TPadLanguageDescription }
+  TPadLanguageDescription = class(TPersistent)
   private
     // Original string fields for XML serialization
     FKeywords: string;
@@ -356,6 +359,10 @@ type
     FCharDesc250Strings: TStrings;
     FCharDesc450Strings: TStrings;
     FCharDesc2000Strings: TStrings;
+
+    FCharDesc250LastLineEnding: boolean;
+    FCharDesc450LastLineEnding: boolean;
+    FCharDesc2000LastLineEnding: boolean;
 
     // Property getters/setters for TStrings
     function GetCharDesc250Strings: TStrings;
@@ -391,12 +398,12 @@ type
   { TPadProgramDescriptions }
   TPadProgramDescriptions = class(TPersistent)
   private
-    FEnglish: TPadEnglishDescription;
+    FEnglish: TPadLanguageDescription;
   public
     constructor Create;
     destructor Destroy; override;
   published
-    property English: TPadEnglishDescription read FEnglish write FEnglish;
+    property English: TPadLanguageDescription read FEnglish write FEnglish;
   end;
 
   { TPadApplicationURLs }
@@ -917,9 +924,9 @@ begin
   inherited Destroy;
 end;
 
-{ TPadEnglishDescription }
+{ TPadLanguageDescription }
 
-constructor TPadEnglishDescription.Create;
+constructor TPadLanguageDescription.Create;
 begin
   inherited Create;
   // Initialize TStrings objects for long descriptions only
@@ -931,7 +938,7 @@ begin
   FCharDesc2000Strings.TrailingLineBreak := False;
 end;
 
-destructor TPadEnglishDescription.Destroy;
+destructor TPadLanguageDescription.Destroy;
 begin
   FCharDesc250Strings.Free;
   FCharDesc450Strings.Free;
@@ -939,13 +946,13 @@ begin
   inherited Destroy;
 end;
 
-function TPadEnglishDescription.GetCharDesc250Strings: TStrings;
+function TPadLanguageDescription.GetCharDesc250Strings: TStrings;
 begin
   // Always return the TStrings object
   Result := FCharDesc250Strings;
 end;
 
-procedure TPadEnglishDescription.SetCharDesc250Strings(Value: TStrings);
+procedure TPadLanguageDescription.SetCharDesc250Strings(Value: TStrings);
 begin
   if Assigned(Value) then
     FCharDesc250Strings.Assign(Value)
@@ -953,12 +960,12 @@ begin
     FCharDesc250Strings.Clear;
 end;
 
-function TPadEnglishDescription.GetCharDesc450Strings: TStrings;
+function TPadLanguageDescription.GetCharDesc450Strings: TStrings;
 begin
   Result := FCharDesc450Strings;
 end;
 
-procedure TPadEnglishDescription.SetCharDesc450Strings(Value: TStrings);
+procedure TPadLanguageDescription.SetCharDesc450Strings(Value: TStrings);
 begin
   if Assigned(Value) then
     FCharDesc450Strings.Assign(Value)
@@ -966,12 +973,12 @@ begin
     FCharDesc450Strings.Clear;
 end;
 
-function TPadEnglishDescription.GetCharDesc2000Strings: TStrings;
+function TPadLanguageDescription.GetCharDesc2000Strings: TStrings;
 begin
   Result := FCharDesc2000Strings;
 end;
 
-procedure TPadEnglishDescription.SetCharDesc2000Strings(Value: TStrings);
+procedure TPadLanguageDescription.SetCharDesc2000Strings(Value: TStrings);
 begin
   if Assigned(Value) then
     FCharDesc2000Strings.Assign(Value)
@@ -980,16 +987,22 @@ begin
 end;
 
 // Call this after loading from XML to populate TStrings from string fields
-procedure TPadEnglishDescription.SyncStringsToStrings;
+procedure TPadLanguageDescription.SyncStringsToStrings;
 begin
+  FCharDesc250LastLineEnding := EndsStr(#10, FCharDesc250) or EndsStr(#13, FCharDesc250);
+  FCharDesc450LastLineEnding := EndsStr(#10, FCharDesc450) or EndsStr(#13, FCharDesc450);
+  FCharDesc2000LastLineEnding := EndsStr(#10, FCharDesc2000) or EndsStr(#13, FCharDesc2000);
   FCharDesc250Strings.Text := FCharDesc250;
   FCharDesc450Strings.Text := FCharDesc450;
   FCharDesc2000Strings.Text := FCharDesc2000;
 end;
 
 // Call this before saving to XML to update string fields from TStrings
-procedure TPadEnglishDescription.SyncStringToStrings;
+procedure TPadLanguageDescription.SyncStringToStrings;
 begin
+  FCharDesc250Strings.TrailingLineBreak := FCharDesc250LastLineEnding;
+  FCharDesc450Strings.TrailingLineBreak := FCharDesc450LastLineEnding;
+  FCharDesc2000Strings.TrailingLineBreak := FCharDesc2000LastLineEnding;
   FCharDesc250 := FCharDesc250Strings.Text;
   FCharDesc450 := FCharDesc450Strings.Text;
   FCharDesc2000 := FCharDesc2000Strings.Text;
@@ -1000,7 +1013,7 @@ end;
 constructor TPadProgramDescriptions.Create;
 begin
   inherited Create;
-  FEnglish := TPadEnglishDescription.Create;
+  FEnglish := TPadLanguageDescription.Create;
 end;
 
 destructor TPadProgramDescriptions.Destroy;
@@ -1362,6 +1375,8 @@ begin
         FProgramInfo.ProgramChangeInfo := GetNodeValue(Node, 'Program_Change_Info');
         FProgramInfo.ProgramSpecificCategory := GetNodeValue(Node, 'Program_Specific_Category');
         FProgramInfo.ProgramCategoryClassAsString := GetNodeValue(Node, 'Program_Category_Class');
+        FProgramInfo.FProgramCategoriesExists := Assigned(Node.FindNode('Program_Categories'));
+        FProgramInfo.ProgramCategories := GetNodeValue(Node, 'Program_Categories');
         FProgramInfo.ProgramSystemRequirements := GetNodeValue(Node, 'Program_System_Requirements');
 
         FProgramInfo.FIncludesJavaVmExists := Assigned(Node.FindNode('Includes_JAVA_VM'));
@@ -1795,6 +1810,9 @@ begin
       FProgramInfo.ProgramSpecificCategory);
     SetNodeText(Doc, Node, 'Program_Category_Class',
       FProgramInfo.ProgramCategoryClassAsString);
+    if FProgramInfo.FProgramCategoriesExists then
+      SetNodeText(Doc, Node, 'Program_Categories',
+        FProgramInfo.ProgramCategories);
     SetNodeText(Doc, Node, 'Program_System_Requirements',
       FProgramInfo.ProgramSystemRequirements);
 
@@ -2175,6 +2193,7 @@ begin
   FProgramInfo.ProgramChangeInfo := '';
   FProgramInfo.ProgramSpecificCategory := '';
   FProgramInfo.ProgramCategoryClass := pccNone;
+  FProgramInfo.ProgramCategories := '';
   FProgramInfo.ProgramSystemRequirements := '';
   FProgramInfo.IncludesJavaVm := False;
   FProgramInfo.IncludesVbRuntime := False;

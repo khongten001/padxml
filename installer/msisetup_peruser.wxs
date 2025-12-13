@@ -77,7 +77,6 @@
             </RegistryKey>
             <!-- Define the padxml file association -->
             <RegistryKey Root="HKCU" Key="Software\Classes\padxml" Action="createAndRemoveOnUninstall">
-                <RegistryValue Type="string" Value="PadXml Tasks" />
                 <RegistryKey Key="DefaultIcon">
                     <RegistryValue Type="string" Value="[INSTALLDIR]$(var.ExeName),1" />
                 </RegistryKey>

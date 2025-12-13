@@ -2074,15 +2074,11 @@ begin
       XMLContent := ConvertEmptyTags(XMLContent, FXmlConfig.XMLEmptyTagType);
 
     if (FXmlConfig.XMLUseTabIndent) or (FXmlConfig.XMLIndentSize <> 2) then
-    begin
       // Only convert if using tabs or custom space count
-      Result := ConvertIndentation(XMLContent, FXmlConfig.XMLUseTabIndent, FXmlConfig.XMLIndentSize);
-    end
+      Result := ConvertIndentation(XMLContent, FXmlConfig.XMLUseTabIndent, FXmlConfig.XMLIndentSize)
     else
-    begin
       // Keep original 2-space indentation
       Result := XMLContent;
-    end;
     if FXmlConfig.XMLEndsWithLineBreak then
       Result += LineEnding;
   finally
@@ -2741,7 +2737,7 @@ end;
 function TPadFormat.ConvertIndentation(const XMLString: string; UseTabs: boolean; IndentSize: integer): string;
 var
   Lines: TStringList;
-  i, Level: integer;
+  i, SpaceCount, Level: integer;
   Line, NewIndent: string;
 begin
   if (IndentSize <= 0) then
@@ -2756,11 +2752,15 @@ begin
     begin
       Line := Lines[i];
 
-      // Calculate indentation level based on leading spaces
-      // WriteXML always uses 2 spaces per level
-      Level := 0;
-      while (Level * 2 < Length(Line)) and (Line[Level * 2 + 1] = ' ') do
-        Inc(Level);
+      // Count all leading spaces in the line
+      SpaceCount := 0;
+      while (SpaceCount < Length(Line)) and (Line[SpaceCount + 1] = ' ') do
+        Inc(SpaceCount);
+
+      // Calculate level based on complete pairs of spaces
+      // WriteXML uses 2 spaces per level, so we use integer division
+      // This ignores any extra single spaces that might be part of text content
+      Level := SpaceCount div 2;
 
       // Create new indentation string
       if UseTabs then
@@ -2771,7 +2771,8 @@ begin
       // Replace indentation in line
       if Level > 0 then
       begin
-        // Remove original 2-space indentation
+        // Remove only complete pairs of spaces (2 * Level)
+        // This preserves any extra single spaces that might be content
         Delete(Line, 1, Level * 2);
         // Add new indentation
         Line := NewIndent + Line;

@@ -13,9 +13,9 @@ object formPadXml: TformPadXml
   OnDestroy = FormDestroy
   OnDropFiles = FormDropFiles
   OnShow = FormShow
-  object peditPad: TTIPropertyGrid
+  object propertyPad: TTIPropertyGrid
     Left = 0
-    Height = 457
+    Height = 434
     Top = 0
     Width = 713
     Align = alClient
@@ -25,11 +25,18 @@ object formPadXml: TformPadXml
     Filter = [tkInteger, tkChar, tkEnumeration, tkFloat, tkSet, tkMethod, tkSString, tkLString, tkAString, tkWString, tkVariant, tkArray, tkRecord, tkInterface, tkClass, tkObject, tkWChar, tkBool, tkInt64, tkQWord, tkDynArray, tkInterfaceRaw, tkProcVar, tkUString, tkUChar, tkHelper, tkFile, tkClassRef, tkPointer]
     Indent = 16
     NameFont.Color = clWindowText
-    OnEditorFilter = peditPadEditorFilter
-    OnModified = peditPadModified
+    OnEditorFilter = propertyPadEditorFilter
+    OnModified = propertyPadModified
     PreferredSplitterX = 250
     SplitterX = 250
     ValueFont.Color = clNavy
+  end
+  object StatusBar: TStatusBar
+    Left = 0
+    Height = 23
+    Top = 434
+    Width = 713
+    Panels = <>
   end
   object MainMenu: TMainMenu
     Left = 72

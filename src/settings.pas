@@ -62,7 +62,8 @@ begin
       JSONObj.Add('Height', Form.Height);
     end;
     JSONObj.Add('WindowState', Ord(Form.WindowState));
-    JSONObj.Add('Language', Language);
+
+    JSONObj.Add('SplitterX', Form.propertyPad.SplitterX);
 
     // Write to file
     with TStringList.Create do
@@ -115,10 +116,10 @@ begin
       if JSONObj.FindPath('WindowState') <> nil then
         Form.WindowState := TWindowState(JSONObj.FindPath('WindowState').AsInteger);
 
-      if JSONObj.FindPath('Language') <> nil then
+      if JSONObj.FindPath('SplitterX') <> nil then
       begin
-        if (JSONObj.FindPath('Language').AsString <> string.Empty) and (Language <> JSONObj.FindPath('Language').AsString) then
-          Language := JSONObj.FindPath('Language').AsString;
+        Form.propertyPad.SplitterX := JSONObj.FindPath('SplitterX').AsInteger;
+        Form.propertyPad.PreferredSplitterX := Form.propertyPad.SplitterX;
       end;
 
       Result := True;

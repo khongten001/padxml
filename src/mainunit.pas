@@ -12,8 +12,8 @@ unit mainunit;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Menus, padformat,
-  RTTIGrids, PropEdits, ObjectInspector, FileUtil;
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Menus, ComCtrls,
+  padformat, RTTIGrids, PropEdits, ObjectInspector, FileUtil;
 
 type
 
@@ -32,9 +32,10 @@ type
     menuBuyMeACoffee: TMenuItem;
     menuCheckForUpdates: TMenuItem;
     menuAbout: TMenuItem;
-    peditPad: TTIPropertyGrid;
+    propertyPad: TTIPropertyGrid;
     dialogSave: TSaveDialog;
     Separator1: TMenuItem;
+    StatusBar: TStatusBar;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -48,8 +49,8 @@ type
     procedure menuFileOpenClick(Sender: TObject);
     procedure menuFileSaveAsClick(Sender: TObject);
     procedure menuFileSaveClick(Sender: TObject);
-    procedure peditPadEditorFilter(Sender: TObject; aEditor: TPropertyEditor; var aShow: boolean);
-    procedure peditPadModified(Sender: TObject);
+    procedure propertyPadEditorFilter(Sender: TObject; aEditor: TPropertyEditor; var aShow: boolean);
+    procedure propertyPadModified(Sender: TObject);
   private
     PadFormat: TPadFormat;
     FFileName: string;
@@ -75,7 +76,7 @@ var
 
 implementation
 
-uses formabout, formdonate, systemtool;
+uses formabout, formdonate, systemtool, settings;
 
   {$R *.lfm}
 
@@ -92,13 +93,15 @@ begin
   FFileName := '';
   FCommandLineFile := '';
 
+  LoadFormSettings(Self);
+
   // Create PadFormat object
   PadFormat := TPadFormat.Create(Self);
   ClearEditor;
   UpdateCaption;
 
   // Set up property grid
-  peditPad.TIObject := PadFormat;
+  propertyPad.TIObject := PadFormat;
 
   // Set up file filters
   SetFileFilterForDialog;
@@ -109,6 +112,8 @@ end;
 
 procedure TformPadXml.FormDestroy(Sender: TObject);
 begin
+  SaveFormSettings(Self);
+
   PadFormat.Free;
 end;
 
@@ -300,8 +305,8 @@ begin
       PadFormat.LoadFromXML(sl.Text);
 
       // Refresh property grid
-      peditPad.TIObject := nil;
-      peditPad.TIObject := PadFormat;
+      propertyPad.TIObject := nil;
+      propertyPad.TIObject := PadFormat;
 
       Result := True;
 
@@ -392,8 +397,8 @@ begin
   PadFormat.MasterPadVersionInfo.MasterPadEditor := 'PadXml 1.0';
 
   // Refresh property grid
-  peditPad.TIObject := nil;
-  peditPad.TIObject := PadFormat;
+  propertyPad.TIObject := nil;
+  propertyPad.TIObject := PadFormat;
 end;
 
 procedure TformPadXml.OpenFile(const AFileName: string);
@@ -574,7 +579,7 @@ begin
     Application.Title := Application.Title + '*';
 end;
 
-procedure TformPadXml.peditPadModified(Sender: TObject);
+procedure TformPadXml.propertyPadModified(Sender: TObject);
 begin
   if not FChanged then
   begin
@@ -583,7 +588,7 @@ begin
   end;
 end;
 
-procedure TformPadXml.peditPadEditorFilter(Sender: TObject; aEditor: TPropertyEditor; var aShow: boolean);
+procedure TformPadXml.propertyPadEditorFilter(Sender: TObject; aEditor: TPropertyEditor; var aShow: boolean);
 begin
   // hide Name
   if SameText(aEditor.GetName, 'Name') then

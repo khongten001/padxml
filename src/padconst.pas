@@ -456,6 +456,38 @@ type
   TPadLangOtherMajorSet = set of TPadLangOtherMajor;
   TPadLangWorldSet = set of TPadLangWorld;
 
+  // XML Encoding types
+  TPadEncoding = (
+    peUTF8,          // UTF-8 (default)
+    peUTF16,         // UTF-16
+    peUTF16BE,       // UTF-16 Big Endian
+    peUTF16LE,       // UTF-16 Little Endian
+    peISO88591,      // ISO-8859-1 (Latin-1)
+    peISO88592,      // ISO-8859-2 (Latin-2)
+    peISO885915,     // ISO-8859-15 (Latin-9)
+    peWindows1250,   // Windows-1250 (Central European)
+    peWindows1251,   // Windows-1251 (Cyrillic)
+    peWindows1252,   // Windows-1252 (Western European)
+    peWindows1253,   // Windows-1253 (Greek)
+    peWindows1254,   // Windows-1254 (Turkish)
+    peWindows1255,   // Windows-1255 (Hebrew)
+    peWindows1256,   // Windows-1256 (Arabic)
+    peWindows1257,   // Windows-1257 (Baltic)
+    peWindows1258,   // Windows-1258 (Vietnamese)
+    peKOI8R,         // KOI8-R (Russian)
+    peKOI8U,         // KOI8-U (Ukrainian)
+    peGB2312,        // GB2312 (Simplified Chinese)
+    peGBK,           // GBK (Simplified Chinese)
+    peGB18030,       // GB18030 (Simplified Chinese)
+    peBig5,          // Big5 (Traditional Chinese)
+    peShiftJIS,      // Shift_JIS (Japanese)
+    peEUCJP,         // EUC-JP (Japanese)
+    peEUCKR,         // EUC-KR (Korean)
+    peISO2022JP,     // ISO-2022-JP (Japanese)
+    peASCII,         // ASCII (US-ASCII)
+    peNone           // No encoding specified
+    );
+
 const
   CategoryCount = Ord(High(TPadProgramCategoryClass)) - Ord(Low(TPadProgramCategoryClass)) + 1;
 
@@ -844,6 +876,37 @@ const
     'Quechua',
     'Samoan',
     'Yoruba'
+    );
+
+  PadEncodingStrings: array[TPadEncoding] of string = (
+    'UTF-8',
+    'UTF-16',
+    'UTF-16BE',
+    'UTF-16LE',
+    'ISO-8859-1',
+    'ISO-8859-2',
+    'ISO-8859-15',
+    'Windows-1250',
+    'Windows-1251',
+    'Windows-1252',
+    'Windows-1253',
+    'Windows-1254',
+    'Windows-1255',
+    'Windows-1256',
+    'Windows-1257',
+    'Windows-1258',
+    'KOI8-R',
+    'KOI8-U',
+    'GB2312',
+    'GBK',
+    'GB18030',
+    'Big5',
+    'Shift_JIS',
+    'EUC-JP',
+    'EUC-KR',
+    'ISO-2022-JP',
+    'ASCII',
+    ''
     );
 
 implementation

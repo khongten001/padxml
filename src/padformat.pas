@@ -19,6 +19,7 @@ uses
   DOM,
   XMLRead,
   XMLWrite,
+  xmlutils,
   padconst;
 
 type
@@ -555,6 +556,9 @@ type
   { TPadFormat }
   TPadFormat = class(TComponent)
   private
+    FXMLEncoding: TPadEncoding;
+    FXMLUseTabIndent: boolean;
+    FXMLIndentSize: integer;
     FMasterPadVersionInfo: TPadMasterVersionInfo;
     FCompanyInfo: TPadCompanyInfo;
     FNewsFeed: TPadNewsFeed;
@@ -567,6 +571,14 @@ type
     function SetNodeText(Doc: TXMLDocument; ParentNode: TDOMNode; NodeName, NodeValue: string): TDOMNode;
     function AddChildNode(ParentNode: TDOMNode; NodeName: string): TDOMNode;
     procedure SetNodeTextValue(Node: TDOMNode; Value: string);
+    // Helper functions for XML formatting
+    procedure SetEncodingByString(const EncodingStr: string);
+    function DetectEncodingFromString(const XMLContent: string): TPadEncoding;
+    function DetectIndentationStyle(const XMLContent: string): boolean;
+    function DetectIndentSize(const XMLContent: string): integer;
+    function ConvertIndentation(const XMLString: string; UseTabs: boolean; IndentSize: integer): string;
+    function SetXMLDeclaration(XMLString: string; XMLVersion: string; Encoding: TPadEncoding): string;
+    function RemoveXMLDeclaration(const XMLString: string): string;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -580,6 +592,9 @@ type
     // Method to clear all properties
     procedure Clear;
   published
+    property XMLEncoding: TPadEncoding read FXMLEncoding write FXMLEncoding default peUTF8;
+    property XMLUseTabIndent: boolean read FXMLUseTabIndent write FXMLUseTabIndent;
+    property XMLIndentSize: integer read FXMLIndentSize write FXMLIndentSize;
     property MasterPadVersionInfo: TPadMasterVersionInfo read FMasterPadVersionInfo write FMasterPadVersionInfo;
     property CompanyInfo: TPadCompanyInfo read FCompanyInfo write FCompanyInfo;
     property NewsFeed: TPadNewsFeed read FNewsFeed write FNewsFeed;
@@ -1120,6 +1135,11 @@ begin
   FPermissions := TPadPermissions.Create;
   FAffiliates := TPadAffiliates.Create;
   FASP := TPadASP.Create;
+
+  // Initialize XML formatting options with default values
+  FXMLEncoding := peUTF8;           // Default XML encoding
+  FXMLUseTabIndent := False;         // Use spaces by default
+  FXMLIndentSize := 2;               // 2 spaces indentation
 end;
 
 destructor TPadFormat.Destroy;
@@ -1168,6 +1188,11 @@ var
 begin
   if XMLContent = '' then
     Exit;
+
+  // Detect XML formatting options from content
+  FXMLEncoding := DetectEncodingFromString(XMLContent);
+  FXmlUseTabIndent := DetectIndentationStyle(XMLContent);
+  FXmlIndentSize := DetectIndentSize(XMLContent);
 
   Stream := TStringStream.Create(XMLContent);
   try
@@ -1570,6 +1595,7 @@ var
   Stream: TStringStream;
   FS: TFormatSettings;
   SaveFullSection: boolean;
+  XMLContent: string;
 begin
   Doc := TXMLDocument.Create;
   try
@@ -1947,9 +1973,24 @@ begin
     Stream := TStringStream.Create('');
     try
       WriteXML(Doc, Stream);
-      Result := Stream.DataString;
+      XMLContent := Stream.DataString;
     finally
       Stream.Free;
+    end;
+
+    // Declaration Replace
+    XMLContent := RemoveXMLDeclaration(XMLContent);
+    XMLContent := SetXMLDeclaration(XmlContent, UTF8Encode(Doc.XMLVersion), FXMLEncoding);
+
+    if (FXmlUseTabIndent) or (FXmlIndentSize <> 2) then
+    begin
+      // Only convert if using tabs or custom space count
+      Result := ConvertIndentation(XMLContent, FXmlUseTabIndent, FXmlIndentSize);
+    end
+    else
+    begin
+      // Keep original 2-space indentation
+      Result := XMLContent;
     end;
   finally
     Doc.Free;
@@ -2229,6 +2270,11 @@ begin
   FASP.ASPForm := True;
   FASP.ASPMember := False;
   FASP.ASPMemberNumber := 0;
+
+  // Clear XML formatting options
+  FXMLEncoding := peUTF8;
+  FXMLUseTabIndent := False;
+  FXMLIndentSize := 2;
 end;
 
 function TPadFormat.SetNodeText(Doc: TXMLDocument; ParentNode: TDOMNode; NodeName, NodeValue: string): TDOMNode;
@@ -2248,6 +2294,251 @@ procedure TPadFormat.SetNodeTextValue(Node: TDOMNode; Value: string);
 begin
   if Assigned(Node) then
     TDOMElement(Node).TextContent := DOMString(Value);
+end;
+
+procedure TPadFormat.SetEncodingByString(const EncodingStr: string);
+var
+  i: TPadEncoding;
+begin
+  // Try to find matching encoding
+  for i := Low(TPadEncoding) to High(TPadEncoding) do
+  begin
+    if SameText(PadEncodingStrings[i], EncodingStr) then
+    begin
+      FXmlEncoding := i;
+      Exit;
+    end;
+  end;
+
+  // If not found, default to UTF-8
+  FXmlEncoding := peUTF8;
+end;
+
+function TPadFormat.DetectEncodingFromString(const XMLContent: string): TPadEncoding;
+var
+  Lines: TStringList;
+  i: integer;
+  Line, EncodingStr: string;
+begin
+  Result := peNone; // Default encoding
+
+  Lines := TStringList.Create;
+  try
+    Lines.Text := XMLContent;
+
+    // Look for XML declaration
+    for i := 0 to Lines.Count - 1 do
+    begin
+      Line := Trim(Lines[i]);
+
+      // Check for XML declaration with encoding
+      if Pos('<?xml', Line) = 1 then
+      begin
+        // Look for encoding attribute
+        if Pos('encoding=', Line) > 0 then
+        begin
+          // Extract encoding value
+          EncodingStr := Copy(Line, Pos('encoding=', Line) + 10, MaxInt);
+          EncodingStr := Copy(EncodingStr, 1, Pos('"', EncodingStr) - 1);
+
+          // Convert to TPadEncoding
+          SetEncodingByString(EncodingStr);
+          Result := FXmlEncoding;
+          Exit;
+        end
+        else
+        begin
+          // XML declaration without encoding specified
+          Result := peNone;
+          Exit;
+        end;
+      end;
+    end;
+  finally
+    Lines.Free;
+  end;
+end;
+
+function TPadFormat.DetectIndentationStyle(const XMLContent: string): boolean;
+var
+  Lines: TStringList;
+  i: integer;
+  Line: string;
+begin
+  Result := False; // Default to spaces
+
+  Lines := TStringList.Create;
+  try
+    Lines.Text := XMLContent;
+
+    // Find first non-empty line after XML declaration
+    for i := 0 to Lines.Count - 1 do
+    begin
+      Line := Trim(Lines[i]);
+
+      // Skip XML declaration and comments
+      if (Line = '') or (Pos('<?xml', Line) = 1) or (Pos('<!--', Line) = 1) then
+        Continue;
+
+      // Check if line starts with tab
+      if (Length(Lines[i]) > 0) and (Lines[i][1] = #9) then
+      begin
+        Result := True;
+        Break;
+      end;
+    end;
+  finally
+    Lines.Free;
+  end;
+end;
+
+function TPadFormat.DetectIndentSize(const XMLContent: string): integer;
+var
+  Lines: TStringList;
+  i, j: integer;
+  Line: string;
+  FirstChar: char;
+begin
+  Result := 2; // Default indent size
+
+  Lines := TStringList.Create;
+  try
+    Lines.Text := XMLContent;
+
+    // Check each line
+    for i := 0 to Lines.Count - 1 do
+    begin
+      Line := Lines[i];
+
+      // Skip empty lines and XML declaration
+      if (Trim(Line) = '') or (Pos('<?xml', Line) = 1) then
+        Continue;
+
+      // Skip comment lines
+      if (Pos('<!--', Trim(Line)) = 1) then
+        Continue;
+
+      // Check if line has indentation
+      if (Length(Line) > 0) then
+      begin
+        FirstChar := Line[1];
+
+        // Count tabs
+        if (FirstChar = #9) then
+        begin
+          j := 1;
+          while (j <= Length(Line)) and (Line[j] = #9) do
+            Inc(j);
+          Result := j - 1;
+          Break;
+        end
+        // Count spaces
+        else if (FirstChar = ' ') then
+        begin
+          j := 1;
+          while (j <= Length(Line)) and (Line[j] = ' ') do
+            Inc(j);
+          Result := j - 1;
+
+          // Don't accept 0 or 1 spaces as valid indentation
+          // (could be just alignment, not indentation)
+          if (Result >= 2) and (Result <= 8) then
+            Break
+          else
+            Result := 2; // Reset to default
+        end;
+      end;
+    end;
+  finally
+    Lines.Free;
+  end;
+end;
+
+function TPadFormat.ConvertIndentation(const XMLString: string; UseTabs: boolean; IndentSize: integer): string;
+var
+  Lines: TStringList;
+  i, Level: integer;
+  Line, NewIndent: string;
+begin
+  if (IndentSize <= 0) then
+    IndentSize := 2;
+
+  Lines := TStringList.Create;
+  try
+    Lines.Text := XMLString;
+
+    for i := 0 to Lines.Count - 1 do
+    begin
+      Line := Lines[i];
+
+      // Calculate indentation level based on leading spaces
+      // WriteXML always uses 2 spaces per level
+      Level := 0;
+      while (Level * 2 < Length(Line)) and (Line[Level * 2 + 1] = ' ') do
+        Inc(Level);
+
+      // Create new indentation string
+      if UseTabs then
+        NewIndent := StringOfChar(#9, Level * IndentSize)  // Use tabs
+      else
+        NewIndent := StringOfChar(' ', Level * IndentSize);  // Use spaces
+
+      // Replace indentation in line
+      if Level > 0 then
+      begin
+        // Remove original 2-space indentation
+        Delete(Line, 1, Level * 2);
+        // Add new indentation
+        Line := NewIndent + Line;
+      end;
+
+      Lines[i] := Line;
+    end;
+
+    Result := Lines.Text;
+  finally
+    Lines.Free;
+  end;
+end;
+
+function TPadFormat.SetXMLDeclaration(XMLString: string; XMLVersion: string; Encoding: TPadEncoding): string;
+var
+  EncodingStr: string;
+  DeclarationStr: string;
+begin
+  // Get encoding string from TPadEncoding enumeration
+  if Encoding = peNone then
+    EncodingStr := ''
+  else
+    EncodingStr := PadEncodingStrings[Encoding];
+
+  // Set XML header data
+  DeclarationStr := '<?xml version="' + XMLVersion + '"';
+  if (EncodingStr <> '') then  DeclarationStr += ' encoding="' + EncodingStr + '"';
+  DeclarationStr += '?>';
+  Result := DeclarationStr + LineEnding + XMLString;
+end;
+
+function TPadFormat.RemoveXMLDeclaration(const XMLString: string): string;
+var
+  Lines: TStringList;
+begin
+  Lines := TStringList.Create;
+  try
+    Lines.Text := XMLString;
+
+    // Check if first line is an XML declaration
+    if (Lines.Count > 0) and (Pos('<?xml', Lines[0]) = 1) then
+      Lines.Delete(0);
+
+    // Remove any empty lines at the beginning
+    while (Lines.Count > 0) and (Trim(Lines[0]) = '') do
+      Lines.Delete(0);
+
+    Result := Lines.Text;
+  finally
+    Lines.Free;
+  end;
 end;
 
 // Helper functions implementation

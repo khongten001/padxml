@@ -209,7 +209,6 @@ type
     FFileNamePreviousExists: boolean;
     FFileNameGenericExists: boolean;
     FFileNameLongExists: boolean;
-
   published
     property FileSizeBytes: cardinal read FFileSizeBytes write FFileSizeBytes;
     property FileSizeK: cardinal read FFileSizeK write FFileSizeK;

@@ -63,6 +63,7 @@ object formPadXml: TformPadXml
       Caption = 'Help'
       object menuBuyMeACoffee: TMenuItem
         Caption = 'Buy me a coffee...'
+        OnClick = menuBuyMeACoffeeClick
       end
       object menuCheckForUpdates: TMenuItem
         Caption = 'Check for updates'
@@ -70,6 +71,7 @@ object formPadXml: TformPadXml
       end
       object menuAbout: TMenuItem
         Caption = 'About...'
+        OnClick = menuAboutClick
       end
     end
   end

@@ -19,11 +19,13 @@ uses
   Interfaces, // this includes the LCL widgetset
   Forms,
   mainunit,
+  formabout,
+  formdonate,
   padformat,
-  runtimetypeinfocontrols,
   padconst,
   settings,
-  systemtool { you can add units after this };
+  systemtool
+  ;
 
   {$R *.res}
 
@@ -37,5 +39,7 @@ begin
   {$POP}
   Application.Initialize;
   Application.CreateForm(TformPadXml, formPadXml);
+  Application.CreateForm(TformAboutPadXml, formAboutPadXml);
+  Application.CreateForm(TformDonatePadXml, formDonatePadXml);
   Application.Run;
 end.

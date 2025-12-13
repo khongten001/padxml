@@ -40,6 +40,8 @@ type
     procedure FormShow(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: boolean);
     procedure FormDropFiles(Sender: TObject; const FileNames: array of string);
+    procedure menuAboutClick(Sender: TObject);
+    procedure menuBuyMeACoffeeClick(Sender: TObject);
     procedure menuCheckForUpdatesClick(Sender: TObject);
     procedure menuFileExitClick(Sender: TObject);
     procedure menuFileNewClick(Sender: TObject);
@@ -73,7 +75,7 @@ var
 
 implementation
 
-uses systemtool;
+uses formabout, formdonate, systemtool;
 
   {$R *.lfm}
 
@@ -133,6 +135,16 @@ begin
 
   // Get the first dropped file
   OpenFile(FileNames[0]);
+end;
+
+procedure TformPadXml.menuAboutClick(Sender: TObject);
+begin
+  formAboutPadXml.ShowModal;
+end;
+
+procedure TformPadXml.menuBuyMeACoffeeClick(Sender: TObject);
+begin
+  formDonatePadXml.ShowModal;
 end;
 
 procedure TformPadXml.menuCheckForUpdatesClick(Sender: TObject);

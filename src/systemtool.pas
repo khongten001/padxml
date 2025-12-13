@@ -144,12 +144,12 @@ begin
 
       // Try to load the language resource file
       try
-        Res := TResourceStream.Create(HInstance, 'notetask.' + LangToUse, RT_RCDATA);
+        Res := TResourceStream.Create(HInstance, 'padxml.' + LangToUse, RT_RCDATA);
         LangFound := True;
       except
         // If language resource not found, fall back to English
         LangToUse := 'en';
-        Res := TResourceStream.Create(HInstance, 'notetask.en', RT_RCDATA);
+        Res := TResourceStream.Create(HInstance, 'padxml.en', RT_RCDATA);
         LangFound := False;
       end;
 

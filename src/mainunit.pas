@@ -561,7 +561,7 @@ var
   AppName: string;
 begin
   // Get application name from project settings or use default
-  AppName := 'PadXml Editor';
+  AppName := 'PadXml';
 
   if FFileName = '' then
     BaseTitle := 'Untitled'

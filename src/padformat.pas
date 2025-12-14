@@ -420,12 +420,18 @@ type
     FApplicationScreenshotURL: string;
     FApplicationIconURL: string;
     FApplicationXMLFileURL: string;
+    FVideoLink1URLExists: boolean;
+    FVideoLink1URL: string;
+    FVideoLink2URLExists: boolean;
+    FVideoLink2URL: string;
   published
     property ApplicationInfoURL: string read FApplicationInfoURL write FApplicationInfoURL;
     property ApplicationOrderURL: string read FApplicationOrderURL write FApplicationOrderURL;
     property ApplicationScreenshotURL: string read FApplicationScreenshotURL write FApplicationScreenshotURL;
     property ApplicationIconURL: string read FApplicationIconURL write FApplicationIconURL;
     property ApplicationXMLFileURL: string read FApplicationXMLFileURL write FApplicationXMLFileURL;
+    property VideoLink1URL: string read FVideoLink1URL write FVideoLink1URL;
+    property VideoLink2URL: string read FVideoLink2URL write FVideoLink2URL;
   end;
 
   { TPadDownloadURLs }
@@ -1458,6 +1464,10 @@ begin
           FWebInfo.ApplicationURLs.ApplicationScreenshotURL := GetNodeValue(SubNode, 'Application_Screenshot_URL');
           FWebInfo.ApplicationURLs.ApplicationIconURL := GetNodeValue(SubNode, 'Application_Icon_URL');
           FWebInfo.ApplicationURLs.ApplicationXMLFileURL := GetNodeValue(SubNode, 'Application_XML_File_URL');
+          FWebInfo.ApplicationURLs.FVideoLink1URLExists := Assigned(SubNode.FindNode('Video_Link_1_URL'));
+          FWebInfo.ApplicationURLs.VideoLink1URL := GetNodeValue(SubNode, 'Video_Link_1_URL');
+          FWebInfo.ApplicationURLs.FVideoLink2URLExists := Assigned(SubNode.FindNode('Video_Link_2_URL'));
+          FWebInfo.ApplicationURLs.VideoLink2URL := GetNodeValue(SubNode, 'Video_Link_2_URL');
         end;
 
         // Download URLs
@@ -1908,6 +1918,15 @@ begin
     // Web Info
     Node := AddChildNode(RootNode, 'Web_Info');
     SubNode := AddChildNode(Node, 'Application_URLs');
+    if MasterPadVersionInfo.Version >= 4 then
+    begin
+      if FWebInfo.ApplicationURLs.FVideoLink1URLExists then
+        SetNodeText(Doc, SubNode, 'Video_Link_1_URL',
+          FWebInfo.ApplicationURLs.VideoLink1URL);
+      if FWebInfo.ApplicationURLs.FVideoLink2URLExists then
+        SetNodeText(Doc, SubNode, 'Video_Link_2_URL',
+          FWebInfo.ApplicationURLs.VideoLink2URL);
+    end;
     SetNodeText(Doc, SubNode, 'Application_Info_URL',
       FWebInfo.ApplicationURLs.ApplicationInfoURL);
     SetNodeText(Doc, SubNode, 'Application_Order_URL',
@@ -2271,6 +2290,10 @@ begin
   FWebInfo.ApplicationURLs.ApplicationScreenshotURL := '';
   FWebInfo.ApplicationURLs.ApplicationIconURL := '';
   FWebInfo.ApplicationURLs.ApplicationXMLFileURL := '';
+  FWebInfo.ApplicationURLs.VideoLink1URL := '';
+  FWebInfo.ApplicationURLs.VideoLink2URL := '';
+  FWebInfo.ApplicationURLs.FVideoLink1URLExists := False;
+  FWebInfo.ApplicationURLs.FVideoLink2URLExists := False;
 
   FWebInfo.DownloadURLs.PrimaryDownloadURL := '';
   FWebInfo.DownloadURLs.SecondaryDownloadURL := '';

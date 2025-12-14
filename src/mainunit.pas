@@ -127,9 +127,9 @@ begin
 
   // Chnage event handler for TStrings
   TStringList(PadFormat.NewsFeed.NewsFeed_Description_250_Strings).OnChange := @propertyPadModified;
-  TStringList(PadFormat.ProgramDescriptions.English.CharDesc250Strings).OnChange := @propertyPadModified;
-  TStringList(PadFormat.ProgramDescriptions.English.CharDesc450Strings).OnChange := @propertyPadModified;
-  TStringList(PadFormat.ProgramDescriptions.English.CharDesc2000Strings).OnChange := @propertyPadModified;
+  TStringList(PadFormat.ProgramDescriptions.Language.CharDesc250Strings).OnChange := @propertyPadModified;
+  TStringList(PadFormat.ProgramDescriptions.Language.CharDesc450Strings).OnChange := @propertyPadModified;
+  TStringList(PadFormat.ProgramDescriptions.Language.CharDesc2000Strings).OnChange := @propertyPadModified;
   TStringList(PadFormat.Permissions.DistributionPermissionsStrings).OnChange := @propertyPadModified;
   TStringList(PadFormat.Permissions.EULAStrings).OnChange := @propertyPadModified;
 end;

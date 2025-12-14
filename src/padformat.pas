@@ -111,6 +111,11 @@ type
     FTwitterCompanyPageExists: boolean;
     FFacebookCompanyPageExists: boolean;
     FCompanyStorePageExists: boolean;
+    procedure SetGooglePlusPage(const Value: string);
+    procedure SetLinkedinPage(const Value: string);
+    procedure SetTwitterCompanyPage(const Value: string);
+    procedure SetFacebookCompanyPage(const Value: string);
+    procedure SetCompanyStorePage(const Value: string);
   public
     constructor Create;
     destructor Destroy; override;
@@ -125,11 +130,11 @@ type
     property CompanyWebsiteURL: string read FCompanyWebsiteURL write FCompanyWebsiteURL;
     property ContactInfo: TPadContactInfo read FContactInfo write FContactInfo;
     property SupportInfo: TPadSupportInfo read FSupportInfo write FSupportInfo;
-    property GooglePlusPage: string read FGooglePlusPage write FGooglePlusPage;
-    property LinkedinPage: string read FLinkedinPage write FLinkedinPage;
-    property TwitterCompanyPage: string read FTwitterCompanyPage write FTwitterCompanyPage;
-    property FacebookCompanyPage: string read FFacebookCompanyPage write FFacebookCompanyPage;
-    property CompanyStorePage: string read FCompanyStorePage write FCompanyStorePage;
+    property GooglePlusPage: string read FGooglePlusPage write SetGooglePlusPage;
+    property LinkedinPage: string read FLinkedinPage write SetLinkedinPage;
+    property TwitterCompanyPage: string read FTwitterCompanyPage write SetTwitterCompanyPage;
+    property FacebookCompanyPage: string read FFacebookCompanyPage write SetFacebookCompanyPage;
+    property CompanyStorePage: string read FCompanyStorePage write SetCompanyStorePage;
   end;
 
   { TPadNewsFeed }
@@ -214,14 +219,18 @@ type
     FFileNamePreviousExists: boolean;
     FFileNameGenericExists: boolean;
     FFileNameLongExists: boolean;
+    procedure SetFileNameVersioned(const Value: string);
+    procedure SetFileNamePrevious(const Value: string);
+    procedure SetFileNameGeneric(const Value: string);
+    procedure SetFileNameLong(const Value: string);
   published
     property FileSizeBytes: cardinal read FFileSizeBytes write FFileSizeBytes;
     property FileSizeK: double read FFileSizeK write FFileSizeK;
     property FileSizeMB: double read FFileSizeMB write FFileSizeMB;
-    property FileNameVersioned: string read FFileNameVersioned write FFileNameVersioned;
-    property FileNamePrevious: string read FFileNamePrevious write FFileNamePrevious;
-    property FileNameGeneric: string read FFileNameGeneric write FFileNameGeneric;
-    property FileNameLong: string read FFileNameLong write FFileNameLong;
+    property FileNameVersioned: string read FFileNameVersioned write SetFileNameVersioned;
+    property FileNamePrevious: string read FFileNamePrevious write SetFileNamePrevious;
+    property FileNameGeneric: string read FFileNameGeneric write SetFileNameGeneric;
+    property FileNameLong: string read FFileNameLong write SetFileNameLong;
   end;
 
   { TPadExpireInfo }
@@ -289,6 +298,11 @@ type
     FFileInfo: TPadFileInfo;
     FExpireInfo: TPadExpireInfo;
 
+    procedure SetProgramCategories(const Value: string);
+    procedure SetIncludesJavaVm(const Value: boolean);
+    procedure SetIncludesVbRuntime(const Value: boolean);
+    procedure SetIncludesDirectX(const Value: boolean);
+
     function GetProgramTypeAsString: string;
     procedure SetProgramTypeAsString(const Value: string);
     function GetProgramReleaseStatusAsString: string;
@@ -340,11 +354,11 @@ type
     property ProgramChangeInfo: string read FProgramChangeInfo write FProgramChangeInfo;
     property ProgramSpecificCategory: string read FProgramSpecificCategory write FProgramSpecificCategory;
     property ProgramCategoryClass: TPadProgramCategoryClass read FProgramCategoryClass write FProgramCategoryClass;
-    property ProgramCategories: string read FProgramCategories write FProgramCategories;
+    property ProgramCategories: string read FProgramCategories write SetProgramCategories;
     property ProgramSystemRequirements: string read FProgramSystemRequirements write FProgramSystemRequirements;
-    property IncludesJavaVm: boolean read FIncludesJavaVm write FIncludesJavaVm default False;
-    property IncludesVbRuntime: boolean read FIncludesVbRuntime write FIncludesVbRuntime default False;
-    property IncludesDirectX: boolean read FIncludesDirectX write FIncludesDirectX default False;
+    property IncludesJavaVm: boolean read FIncludesJavaVm write SetIncludesJavaVm default False;
+    property IncludesVbRuntime: boolean read FIncludesVbRuntime write SetIncludesVbRuntime default False;
+    property IncludesDirectX: boolean read FIncludesDirectX write SetIncludesDirectX default False;
     property FileInfo: TPadFileInfo read FFileInfo write FFileInfo;
     property ExpireInfo: TPadExpireInfo read FExpireInfo write FExpireInfo;
   end;
@@ -403,13 +417,14 @@ type
   { TPadProgramDescriptions }
   TPadProgramDescriptions = class(TPersistent)
   private
-    FEnglishExists: boolean;
-    FEnglish: TPadLanguageDescription;
+    FLanguageName: string;
+    FLanguage: TPadLanguageDescription;
   public
     constructor Create;
     destructor Destroy; override;
   published
-    property English: TPadLanguageDescription read FEnglish write FEnglish;
+    property LanguageName: string read FLanguageName write FLanguageName;
+    property Language: TPadLanguageDescription read FLanguage write FLanguage;
   end;
 
   { TPadApplicationURLs }
@@ -822,6 +837,44 @@ begin
   Result := pnftRSS090;
 end;
 
+{ TPadFileInfo }
+
+procedure TPadFileInfo.SetFileNameVersioned(const Value: string);
+begin
+  if FFileNameVersioned <> Value then
+  begin
+    FFileNameVersioned := Value;
+    FFileNameVersionedExists := True;
+  end;
+end;
+
+procedure TPadFileInfo.SetFileNamePrevious(const Value: string);
+begin
+  if FFileNamePrevious <> Value then
+  begin
+    FFileNamePrevious := Value;
+    FFileNamePreviousExists := True;
+  end;
+end;
+
+procedure TPadFileInfo.SetFileNameGeneric(const Value: string);
+begin
+  if FFileNameGeneric <> Value then
+  begin
+    FFileNameGeneric := Value;
+    FFileNameGenericExists := True;
+  end;
+end;
+
+procedure TPadFileInfo.SetFileNameLong(const Value: string);
+begin
+  if FFileNameLong <> Value then
+  begin
+    FFileNameLong := Value;
+    FFileNameLongExists := True;
+  end;
+end;
+
 { TPadExpireInfo }
 
 function TPadExpireInfo.GetExpireBasedOnAsString: string;
@@ -920,6 +973,46 @@ begin
     FProgramLanguageOtherMajor, FProgramLanguageWorld);
 end;
 
+procedure TPadProgramInfo.SetProgramCategories(const Value: string);
+begin
+  if FProgramCategories <> Value then
+  begin
+    FProgramCategories := Value;
+    // Set Exists flag to True when value is assigned
+    FProgramCategoriesExists := True;
+  end;
+end;
+
+procedure TPadProgramInfo.SetIncludesJavaVm(const Value: boolean);
+begin
+  if FIncludesJavaVm <> Value then
+  begin
+    FIncludesJavaVm := Value;
+    // Set Exists flag to True when value is assigned
+    FIncludesJavaVmExists := True;
+  end;
+end;
+
+procedure TPadProgramInfo.SetIncludesVbRuntime(const Value: boolean);
+begin
+  if FIncludesVbRuntime <> Value then
+  begin
+    FIncludesVbRuntime := Value;
+    // Set Exists flag to True when value is assigned
+    FIncludesVbRuntimeExists := True;
+  end;
+end;
+
+procedure TPadProgramInfo.SetIncludesDirectX(const Value: boolean);
+begin
+  if FIncludesDirectX <> Value then
+  begin
+    FIncludesDirectX := Value;
+    // Set Exists flag to True when value is assigned
+    FIncludesDirectXExists := True;
+  end;
+end;
+
 { TPadCompanyInfo }
 
 constructor TPadCompanyInfo.Create;
@@ -927,6 +1020,12 @@ begin
   inherited Create;
   FContactInfo := TPadContactInfo.Create;
   FSupportInfo := TPadSupportInfo.Create;
+
+  FGooglePlusPageExists := False;
+  FLinkedinPageExists := False;
+  FTwitterCompanyPageExists := False;
+  FFacebookCompanyPageExists := False;
+  FCompanyStorePageExists := False;
 end;
 
 destructor TPadCompanyInfo.Destroy;
@@ -934,6 +1033,51 @@ begin
   FContactInfo.Free;
   FSupportInfo.Free;
   inherited Destroy;
+end;
+
+procedure TPadCompanyInfo.SetGooglePlusPage(const Value: string);
+begin
+  if FGooglePlusPage <> Value then
+  begin
+    FGooglePlusPage := Value;
+    FGooglePlusPageExists := True;
+  end;
+end;
+
+procedure TPadCompanyInfo.SetLinkedinPage(const Value: string);
+begin
+  if FLinkedinPage <> Value then
+  begin
+    FLinkedinPage := Value;
+    FLinkedinPageExists := True;
+  end;
+end;
+
+procedure TPadCompanyInfo.SetTwitterCompanyPage(const Value: string);
+begin
+  if FTwitterCompanyPage <> Value then
+  begin
+    FTwitterCompanyPage := Value;
+    FTwitterCompanyPageExists := True;
+  end;
+end;
+
+procedure TPadCompanyInfo.SetFacebookCompanyPage(const Value: string);
+begin
+  if FFacebookCompanyPage <> Value then
+  begin
+    FFacebookCompanyPage := Value;
+    FFacebookCompanyPageExists := True;
+  end;
+end;
+
+procedure TPadCompanyInfo.SetCompanyStorePage(const Value: string);
+begin
+  if FCompanyStorePage <> Value then
+  begin
+    FCompanyStorePage := Value;
+    FCompanyStorePageExists := True;
+  end;
 end;
 
 { TPadLanguageDescription }
@@ -1025,12 +1169,13 @@ end;
 constructor TPadProgramDescriptions.Create;
 begin
   inherited Create;
-  FEnglish := TPadLanguageDescription.Create;
+  FLanguage := TPadLanguageDescription.Create;
+  FLanguageName := 'English';
 end;
 
 destructor TPadProgramDescriptions.Destroy;
 begin
-  FEnglish.Free;
+  FLanguage.Free;
   inherited Destroy;
 end;
 
@@ -1195,7 +1340,6 @@ begin
   FXMLEmptyTagType := ettWithoutSpace; // Default empty tag format <Empty/>
   FXMLEndsWithLineBreak := False;
 end;
-
 
 { TPadFormat }
 
@@ -1438,16 +1582,16 @@ begin
       Node := RootNode.FindNode('Program_Descriptions');
       if Assigned(Node) then
       begin
-        SubNode := Node.FindNode('English');
-        FProgramDescriptions.FEnglishExists := Assigned(SubNode);
+        SubNode := Node.FirstChild;
+        FProgramDescriptions.FLanguageName := utf8string(SubNode.NodeName);
         if Assigned(SubNode) then
         begin
-          FProgramDescriptions.English.Keywords := GetNodeValue(SubNode, 'Keywords');
-          FProgramDescriptions.English.CharDesc45 := GetNodeValue(SubNode, 'Char_Desc_45');
-          FProgramDescriptions.English.CharDesc80 := GetNodeValue(SubNode, 'Char_Desc_80');
-          FProgramDescriptions.English.CharDesc250 := GetNodeValue(SubNode, 'Char_Desc_250');
-          FProgramDescriptions.English.CharDesc450 := GetNodeValue(SubNode, 'Char_Desc_450');
-          FProgramDescriptions.English.CharDesc2000 := GetNodeValue(SubNode, 'Char_Desc_2000');
+          FProgramDescriptions.FLanguage.Keywords := GetNodeValue(SubNode, 'Keywords');
+          FProgramDescriptions.FLanguage.CharDesc45 := GetNodeValue(SubNode, 'Char_Desc_45');
+          FProgramDescriptions.FLanguage.CharDesc80 := GetNodeValue(SubNode, 'Char_Desc_80');
+          FProgramDescriptions.FLanguage.CharDesc250 := GetNodeValue(SubNode, 'Char_Desc_250');
+          FProgramDescriptions.FLanguage.CharDesc450 := GetNodeValue(SubNode, 'Char_Desc_450');
+          FProgramDescriptions.FLanguage.CharDesc2000 := GetNodeValue(SubNode, 'Char_Desc_2000');
         end;
       end;
 
@@ -1683,7 +1827,7 @@ begin
       else
         FASP.ASPForm := False;
 
-      FProgramDescriptions.English.SyncStringsToStrings;
+      FProgramDescriptions.Language.SyncStringsToStrings;
       FNewsFeed.SyncStringsToStrings;
       FPermissions.SyncStringsToStrings;
     finally
@@ -1705,7 +1849,7 @@ var
 begin
   Doc := TXMLDocument.Create;
   try
-    FProgramDescriptions.English.SyncStringToStrings;
+    FProgramDescriptions.Language.SyncStringToStrings;
     FNewsFeed.SyncStringToStrings;
     FPermissions.SyncStringToStrings;
 
@@ -1897,23 +2041,20 @@ begin
       IfThen(FProgramInfo.ExpireInfo.ExpireYear = 0, '', IntToStr(FProgramInfo.ExpireInfo.ExpireYear)));
 
     // Program Descriptions
-    if FProgramDescriptions.FEnglishExists then
-    begin
-      Node := AddChildNode(RootNode, 'Program_Descriptions');
-      SubNode := AddChildNode(Node, 'English');
-      SetNodeText(Doc, SubNode, 'Keywords',
-        FProgramDescriptions.English.Keywords);
-      SetNodeText(Doc, SubNode, 'Char_Desc_45',
-        FProgramDescriptions.English.CharDesc45);
-      SetNodeText(Doc, SubNode, 'Char_Desc_80',
-        FProgramDescriptions.English.CharDesc80);
-      SetNodeText(Doc, SubNode, 'Char_Desc_250',
-        FProgramDescriptions.English.CharDesc250);
-      SetNodeText(Doc, SubNode, 'Char_Desc_450',
-        FProgramDescriptions.English.CharDesc450);
-      SetNodeText(Doc, SubNode, 'Char_Desc_2000',
-        FProgramDescriptions.English.CharDesc2000);
-    end;
+    Node := AddChildNode(RootNode, 'Program_Descriptions');
+    SubNode := AddChildNode(Node, FProgramDescriptions.LanguageName);
+    SetNodeText(Doc, SubNode, 'Keywords',
+      FProgramDescriptions.Language.Keywords);
+    SetNodeText(Doc, SubNode, 'Char_Desc_45',
+      FProgramDescriptions.Language.CharDesc45);
+    SetNodeText(Doc, SubNode, 'Char_Desc_80',
+      FProgramDescriptions.Language.CharDesc80);
+    SetNodeText(Doc, SubNode, 'Char_Desc_250',
+      FProgramDescriptions.Language.CharDesc250);
+    SetNodeText(Doc, SubNode, 'Char_Desc_450',
+      FProgramDescriptions.Language.CharDesc450);
+    SetNodeText(Doc, SubNode, 'Char_Desc_2000',
+      FProgramDescriptions.Language.CharDesc2000);
 
     // Web Info
     Node := AddChildNode(RootNode, 'Web_Info');
@@ -2272,17 +2413,18 @@ begin
   FProgramInfo.ExpireInfo.ExpireYear := 0;
 
   // Clear Program Descriptions
-  FProgramDescriptions.English.Keywords := '';
-  FProgramDescriptions.English.CharDesc45 := '';
-  FProgramDescriptions.English.CharDesc80 := '';
-  FProgramDescriptions.English.CharDesc250 := '';
-  FProgramDescriptions.English.CharDesc450 := '';
-  FProgramDescriptions.English.CharDesc2000 := '';
+  FProgramDescriptions.FLanguageName := 'English';
+  FProgramDescriptions.Language.Keywords := '';
+  FProgramDescriptions.Language.CharDesc45 := '';
+  FProgramDescriptions.Language.CharDesc80 := '';
+  FProgramDescriptions.Language.CharDesc250 := '';
+  FProgramDescriptions.Language.CharDesc450 := '';
+  FProgramDescriptions.Language.CharDesc2000 := '';
 
   // Clear TStrings objects
-  FProgramDescriptions.English.CharDesc250Strings.Clear;
-  FProgramDescriptions.English.CharDesc450Strings.Clear;
-  FProgramDescriptions.English.CharDesc2000Strings.Clear;
+  FProgramDescriptions.Language.CharDesc250Strings.Clear;
+  FProgramDescriptions.Language.CharDesc450Strings.Clear;
+  FProgramDescriptions.Language.CharDesc2000Strings.Clear;
 
   // Clear Web Info
   FWebInfo.ApplicationURLs.ApplicationInfoURL := '';
@@ -2493,7 +2635,7 @@ var
   Lines: TStringList;
   i, pStart, pEnd: integer;
   Line, EncodingStr: string;
-  QuoteChar: Char;
+  QuoteChar: char;
 begin
   Result := peNone; // Default encoding
 

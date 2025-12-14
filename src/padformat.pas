@@ -106,6 +106,11 @@ type
     FTwitterCompanyPage: string;
     FFacebookCompanyPage: string;
     FCompanyStorePage: string;
+    FGooglePlusPageExists: boolean;
+    FLinkedinPageExists: boolean;
+    FTwitterCompanyPageExists: boolean;
+    FFacebookCompanyPageExists: boolean;
+    FCompanyStorePageExists: boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -1317,10 +1322,15 @@ begin
         end;
 
         // Social media pages
+        FCompanyInfo.FGooglePlusPageExists := Assigned(Node.FindNode('GooglePlusPage'));
         FCompanyInfo.GooglePlusPage := GetNodeValue(Node, 'GooglePlusPage');
+        FCompanyInfo.FLinkedinPageExists := Assigned(Node.FindNode('LinkedinPage'));
         FCompanyInfo.LinkedinPage := GetNodeValue(Node, 'LinkedinPage');
+        FCompanyInfo.FTwitterCompanyPageExists := Assigned(Node.FindNode('TwitterCompanyPage'));
         FCompanyInfo.TwitterCompanyPage := GetNodeValue(Node, 'TwitterCompanyPage');
+        FCompanyInfo.FFacebookCompanyPageExists := Assigned(Node.FindNode('FacebookCompanyPage'));
         FCompanyInfo.FacebookCompanyPage := GetNodeValue(Node, 'FacebookCompanyPage');
+        FCompanyInfo.FCompanyStorePageExists := Assigned(Node.FindNode('CompanyStorePage'));
         FCompanyInfo.CompanyStorePage := GetNodeValue(Node, 'CompanyStorePage');
       end;
 
@@ -1751,11 +1761,16 @@ begin
     if (MasterPadVersionInfo.Version >= 4) then
     begin
       // Social media pages
-      SetNodeText(Doc, Node, 'GooglePlusPage', FCompanyInfo.GooglePlusPage);
-      SetNodeText(Doc, Node, 'LinkedinPage', FCompanyInfo.LinkedinPage);
-      SetNodeText(Doc, Node, 'TwitterCompanyPage', FCompanyInfo.TwitterCompanyPage);
-      SetNodeText(Doc, Node, 'FacebookCompanyPage', FCompanyInfo.FacebookCompanyPage);
-      SetNodeText(Doc, Node, 'CompanyStorePage', FCompanyInfo.CompanyStorePage);
+      if FCompanyInfo.FGooglePlusPageExists then
+        SetNodeText(Doc, Node, 'GooglePlusPage', FCompanyInfo.GooglePlusPage);
+      if FCompanyInfo.FLinkedinPageExists then
+        SetNodeText(Doc, Node, 'LinkedinPage', FCompanyInfo.LinkedinPage);
+      if FCompanyInfo.FTwitterCompanyPageExists then
+        SetNodeText(Doc, Node, 'TwitterCompanyPage', FCompanyInfo.TwitterCompanyPage);
+      if FCompanyInfo.FFacebookCompanyPageExists then
+        SetNodeText(Doc, Node, 'FacebookCompanyPage', FCompanyInfo.FacebookCompanyPage);
+      if FCompanyInfo.FCompanyStorePageExists then
+        SetNodeText(Doc, Node, 'CompanyStorePage', FCompanyInfo.CompanyStorePage);
 
       // Save News Feed (updated with new fields)
       if FNewsFeed.NewsFeed_FORM then
@@ -2153,6 +2168,11 @@ begin
   FCompanyInfo.TwitterCompanyPage := '';
   FCompanyInfo.FacebookCompanyPage := '';
   FCompanyInfo.CompanyStorePage := '';
+  FCompanyInfo.FGooglePlusPageExists := False;
+  FCompanyInfo.FLinkedinPageExists := False;
+  FCompanyInfo.FTwitterCompanyPageExists := False;
+  FCompanyInfo.FFacebookCompanyPageExists := False;
+  FCompanyInfo.FCompanyStorePageExists := False;
 
   // Clear News Feed
   FNewsFeed.NewsFeed_FORM := False;

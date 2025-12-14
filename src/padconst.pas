@@ -37,6 +37,7 @@ type
 
   TPadReleaseStatus = (
     prsNone,
+    prsUpdate,
     prsMajorUpdate,
     prsMinorUpdate,
     prsNewRelease,

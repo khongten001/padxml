@@ -3076,6 +3076,7 @@ end;
 function PadReleaseStatusToString(Value: TPadReleaseStatus): string;
 begin
   case Value of
+    prsUpdate: Result := 'Update';
     prsMajorUpdate: Result := 'Major Update';
     prsMinorUpdate: Result := 'Minor Update';
     prsNewRelease: Result := 'New Release';
@@ -3089,7 +3090,9 @@ end;
 
 function StringToPadReleaseStatus(const Value: string): TPadReleaseStatus;
 begin
-  if Value = 'Major Update' then
+  if Value = 'Update' then
+    Result := prsUpdate
+  else if Value = 'Major Update' then
     Result := prsMajorUpdate
   else if Value = 'Minor Update' then
     Result := prsMinorUpdate

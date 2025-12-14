@@ -199,7 +199,7 @@ type
   TPadFileInfo = class(TPersistent)
   private
     FFileSizeBytes: cardinal;
-    FFileSizeK: cardinal;
+    FFileSizeK: double;
     FFileSizeMB: double;
     FFileNameVersioned: string;
     FFileNamePrevious: string;
@@ -211,7 +211,7 @@ type
     FFileNameLongExists: boolean;
   published
     property FileSizeBytes: cardinal read FFileSizeBytes write FFileSizeBytes;
-    property FileSizeK: cardinal read FFileSizeK write FFileSizeK;
+    property FileSizeK: double read FFileSizeK write FFileSizeK;
     property FileSizeMB: double read FFileSizeMB write FFileSizeMB;
     property FileNameVersioned: string read FFileNameVersioned write FFileNameVersioned;
     property FileNamePrevious: string read FFileNamePrevious write FFileNamePrevious;
@@ -398,6 +398,7 @@ type
   { TPadProgramDescriptions }
   TPadProgramDescriptions = class(TPersistent)
   private
+    FEnglishExists: boolean;
     FEnglish: TPadLanguageDescription;
   public
     constructor Create;
@@ -1391,7 +1392,7 @@ begin
         if Assigned(SubNode) then
         begin
           FProgramInfo.FileInfo.FileSizeBytes := StrToInt64Safe(GetNodeValue(SubNode, 'File_Size_Bytes'));
-          FProgramInfo.FileInfo.FileSizeK := StrToInt64Safe(GetNodeValue(SubNode, 'File_Size_K'));
+          FProgramInfo.FileInfo.FileSizeK := StrToFloatSafe(GetNodeValue(SubNode, 'File_Size_K'));
           FProgramInfo.FileInfo.FileSizeMB := StrToFloatSafe(GetNodeValue(SubNode, 'File_Size_MB'));
           FProgramInfo.FileInfo.FFileNameVersionedExists := Assigned(SubNode.FindNode('Filename_Versioned'));
           FProgramInfo.FileInfo.FileNameVersioned := GetNodeValue(SubNode, 'Filename_Versioned');
@@ -1422,6 +1423,7 @@ begin
       if Assigned(Node) then
       begin
         SubNode := Node.FindNode('English');
+        FProgramDescriptions.FEnglishExists := Assigned(SubNode);
         if Assigned(SubNode) then
         begin
           FProgramDescriptions.English.Keywords := GetNodeValue(SubNode, 'Keywords');
@@ -1838,16 +1840,19 @@ begin
       SetNodeText(Doc, SubNode, 'Filename_Long', FProgramInfo.FileInfo.FFileNameLong);
     SetNodeText(Doc, SubNode, 'File_Size_Bytes',
       IntToStr(FProgramInfo.FileInfo.FileSizeBytes));
-    SetNodeText(Doc, SubNode, 'File_Size_K',
-      IntToStr(FProgramInfo.FileInfo.FileSizeK));
     FS.DecimalSeparator := '.';
+    if Frac(FProgramInfo.FileInfo.FileSizeK) = 0 then
+      SetNodeText(Doc, SubNode, 'File_Size_K',
+        FormatFloat('0.####', FProgramInfo.FileInfo.FileSizeK, FS))
+    else
+      SetNodeText(Doc, SubNode, 'File_Size_K',
+        FormatFloat('0.00##', FProgramInfo.FileInfo.FileSizeK, FS));
     if Frac(FProgramInfo.FileInfo.FileSizeMB) = 0 then
       SetNodeText(Doc, SubNode, 'File_Size_MB',
         FormatFloat('0.####', FProgramInfo.FileInfo.FileSizeMB, FS))
     else
       SetNodeText(Doc, SubNode, 'File_Size_MB',
         FormatFloat('0.00##', FProgramInfo.FileInfo.FileSizeMB, FS));
-
 
     // Expire Info
     SubNode := AddChildNode(Node, 'Expire_Info');
@@ -1867,20 +1872,23 @@ begin
       IfThen(FProgramInfo.ExpireInfo.ExpireYear = 0, '', IntToStr(FProgramInfo.ExpireInfo.ExpireYear)));
 
     // Program Descriptions
-    Node := AddChildNode(RootNode, 'Program_Descriptions');
-    SubNode := AddChildNode(Node, 'English');
-    SetNodeText(Doc, SubNode, 'Keywords',
-      FProgramDescriptions.English.Keywords);
-    SetNodeText(Doc, SubNode, 'Char_Desc_45',
-      FProgramDescriptions.English.CharDesc45);
-    SetNodeText(Doc, SubNode, 'Char_Desc_80',
-      FProgramDescriptions.English.CharDesc80);
-    SetNodeText(Doc, SubNode, 'Char_Desc_250',
-      FProgramDescriptions.English.CharDesc250);
-    SetNodeText(Doc, SubNode, 'Char_Desc_450',
-      FProgramDescriptions.English.CharDesc450);
-    SetNodeText(Doc, SubNode, 'Char_Desc_2000',
-      FProgramDescriptions.English.CharDesc2000);
+    if FProgramDescriptions.FEnglishExists then
+    begin
+      Node := AddChildNode(RootNode, 'Program_Descriptions');
+      SubNode := AddChildNode(Node, 'English');
+      SetNodeText(Doc, SubNode, 'Keywords',
+        FProgramDescriptions.English.Keywords);
+      SetNodeText(Doc, SubNode, 'Char_Desc_45',
+        FProgramDescriptions.English.CharDesc45);
+      SetNodeText(Doc, SubNode, 'Char_Desc_80',
+        FProgramDescriptions.English.CharDesc80);
+      SetNodeText(Doc, SubNode, 'Char_Desc_250',
+        FProgramDescriptions.English.CharDesc250);
+      SetNodeText(Doc, SubNode, 'Char_Desc_450',
+        FProgramDescriptions.English.CharDesc450);
+      SetNodeText(Doc, SubNode, 'Char_Desc_2000',
+        FProgramDescriptions.English.CharDesc2000);
+    end;
 
     // Web Info
     Node := AddChildNode(RootNode, 'Web_Info');

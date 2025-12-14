@@ -427,7 +427,7 @@ procedure TformPadXml.ClearEditor;
 begin
   // Clear the PadFormat object
   PadFormat.Clear;
-  PadFormat.MasterPadVersionInfo.MasterPadEditor := 'PadXml 1.0';
+  PadFormat.MasterPadVersionInfo.MasterPadEditor := 'PadXml 1.0.0';
 
   // Refresh property grid
   propertyPad.TIObject := nil;

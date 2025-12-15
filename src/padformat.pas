@@ -607,11 +607,11 @@ type
   private
     FASPForm: boolean;
     FASPMember: boolean;
-    FASPMemberNumber: word;
+    FASPMemberNumber: string;
   published
     property ASPForm: boolean read FASPForm write FASPForm;
     property ASPMember: boolean read FASPMember write FASPMember;
-    property ASPMemberNumber: word read FASPMemberNumber write FASPMemberNumber;
+    property ASPMemberNumber: string read FASPMemberNumber write FASPMemberNumber;
   end;
 
   { TXmlConfig }
@@ -1845,7 +1845,7 @@ begin
       begin
         FASP.ASPForm := True;
         FASP.ASPMember := UpperCase(GetNodeValue(Node, 'ASP_Member')) = 'Y';
-        FASP.ASPMemberNumber := StrToIntDef(GetNodeValue(Node, 'ASP_Member_Number'), 0);
+        FASP.ASPMemberNumber := GetNodeValue(Node, 'ASP_Member_Number');
       end
       else
         FASP.ASPForm := False;
@@ -2275,8 +2275,7 @@ begin
       Node := AddChildNode(RootNode, 'ASP');
       SetNodeText(Doc, Node, 'ASP_FORM', BoolToStr(FASP.ASPForm, 'Y', 'N'));
       SetNodeText(Doc, Node, 'ASP_Member', BoolToStr(FASP.ASPMember, 'Y', 'N'));
-      SetNodeText(Doc, Node, 'ASP_Member_Number',
-        IfThen(FASP.ASPMemberNumber = 0, '', IntToStr(FASP.ASPMemberNumber)));
+      SetNodeText(Doc, Node, 'ASP_Member_Number', FASP.ASPMemberNumber);
     end;
 
     // Save to string
@@ -2606,7 +2605,7 @@ begin
   // Clear ASP
   FASP.ASPForm := True;
   FASP.ASPMember := False;
-  FASP.ASPMemberNumber := 0;
+  FASP.ASPMemberNumber := '';
 
   // Clear XML formatting options
   FXmlConfig.XMLEncoding := peUTF8;

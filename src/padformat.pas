@@ -3022,25 +3022,57 @@ begin
         if (TrimmedLine[1] <> '<') then
         begin
           InsideTextNode := True;
-          // Leave text lines as-is
+
+          // Inside text node: replace every 2 spaces with Tab if UseTabs=True
+          // Process text content line (including indentation)
+          if UseTabs then
+          begin
+            // Count leading spaces
+            SpaceCount := 0;
+            while (SpaceCount < Length(Line)) and (Line[SpaceCount + 1] = ' ') do
+              Inc(SpaceCount);
+
+            // Replace pairs of spaces with tabs
+            Level := SpaceCount div 2;
+            if Level > 0 then
+              Line := StringOfChar(#9, Level) + Copy(Line, SpaceCount + 1, MaxInt);
+          end;
+
+          Lines[i] := Line;
           Continue;
         end;
       end
       else
       begin
-        // We're inside a text node
-        // If line starts with '<', check if it's a closing tag
+        // We're inside a text node - process ALL lines including closing tag
+        // Replace every 2 spaces with Tab if UseTabs=True, ignore IndentSize
+
+        if UseTabs then
+        begin
+          // Count leading spaces
+          SpaceCount := 0;
+          while (SpaceCount < Length(Line)) and (Line[SpaceCount + 1] = ' ') do
+            Inc(SpaceCount);
+
+          // Replace pairs of spaces with tabs
+          Level := SpaceCount div 2;
+          if Level > 0 then
+            Line := StringOfChar(#9, Level) + Copy(Line, SpaceCount + 1, MaxInt);
+        end;
+
+        Lines[i] := Line;
+
+        // Check if this line ends the text node (is a closing tag)
         if (TrimmedLine[1] = '<') then
         begin
           // Check if it's a closing tag
           if (Length(TrimmedLine) > 1) and (TrimmedLine[2] = '/') then
           begin
-            // This is a closing tag after text - leave it as-is
+            // This is a closing tag after text - we've already processed it
             InsideTextNode := False;
-            Continue;
           end;
         end;
-        // Still inside text node - leave as-is
+
         Continue;
       end;
 
